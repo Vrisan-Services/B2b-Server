@@ -35,6 +35,8 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
 
     // Store additional user data in Firestore
     await db.collection('users').doc(userRecord.uid).set({
+      id: userRecord.uid,
+      userId: userRecord.uid,
       orgName: userData.orgName,
       contactPerson: userData.contactPerson,
       designation: userData.designation,

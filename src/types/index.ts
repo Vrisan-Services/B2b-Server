@@ -1,5 +1,6 @@
 // User related types
 export interface UserSignupData {
+  userId:string
   orgName: string;
   contactPerson: string;
   designation: string;
@@ -21,6 +22,7 @@ export interface UserLoginData {
 
 export interface UserData {
   id: string;
+  userId: string;
   orgName: string;
   contactPerson: string;
   designation: string;
