@@ -33,7 +33,20 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       throw new Error('Failed to send verification email');
     }
 
-    // Store additional user data in Firestore
+    // Create initial address object
+    const initialAddress = {
+      id: db.collection('users').doc().id, // Generate a unique ID for the address
+      address1: userData.address1,
+      address2: userData.address2,
+      city: userData.city,
+      state: userData.state,
+      pincode: userData.pincode,
+      isDefault: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Store user data with addresses array in Firestore
     await db.collection('users').doc(userRecord.uid).set({
       id: userRecord.uid,
       userId: userRecord.uid,
@@ -42,13 +55,9 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       designation: userData.designation,
       email: userData.email,
       phone: userData.phone,
-      address1: userData.address1,
-      address2: userData.address2,
-      city: userData.city,
-      state: userData.state,
-      pincode: userData.pincode,
       gstNumber: userData.gstNumber,
       emailVerified: false,
+      addresses: [initialAddress], // Store address as an array
       createdAt: new Date().toISOString(),
     });
 

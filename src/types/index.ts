@@ -1,6 +1,18 @@
 // User related types
+export interface Address {
+  id: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface UserSignupData {
-  userId:string
+  userId: string;
   orgName: string;
   contactPerson: string;
   designation: string;
@@ -28,12 +40,30 @@ export interface UserData {
   designation: string;
   email: string;
   phone: string;
-  address: string;
+  addresses: Address[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Address related types
+export interface AddAddressData {
+  address1: string;
+  address2?: string;
   city: string;
   state: string;
   pincode: string;
-  createdAt: Date;
-  updatedAt: Date;
+  isDefault?: boolean;
+}
+
+export interface UpdateAddressData extends Partial<AddAddressData> {
+  id: string;
+}
+
+export interface UpdateProfileData {
+  orgName?: string;
+  contactPerson?: string;
+  designation?: string;
+  phone?: string;
 }
 
 // API Response types
