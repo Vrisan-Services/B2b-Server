@@ -5,7 +5,7 @@ import authRoutes from './routes/auth.routes';
 import projectRoutes from './routes/project.routes';
 import userRoutes from './routes/user.routes';
 import waitlistRoutes from './routes/waitlist.routes';
-
+import subscriptionRoutes from './routes/subscription.routes';
 dotenv.config();
 
 const app = express();
@@ -20,7 +20,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/waitlist', waitlistRoutes);
-
+app.use('/api/subscribe', subscriptionRoutes);
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
