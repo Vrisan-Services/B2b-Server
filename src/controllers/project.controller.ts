@@ -31,6 +31,34 @@ export const createProjectHandler = async (req: Request, res: Response): Promise
         res.status(201).json(project);
     } catch (error) {
         console.error('Error creating project:', error);
+        
+        if (error instanceof Error) {
+            // Handle subscription-related errors
+            if (error.message.includes('active subscription')) {
+                res.status(403).json({
+                    error: 'Subscription required',
+                    details: error.message
+                });
+                return;
+            }
+            
+            if (error.message.includes('limit exceeded')) {
+                res.status(403).json({
+                    error: 'Subscription limit exceeded',
+                    details: error.message
+                });
+                return;
+            }
+
+            if (error.message === 'User not found') {
+                res.status(404).json({
+                    error: 'User not found',
+                    details: error.message
+                });
+                return;
+            }
+        }
+
         res.status(500).json({
             error: 'Failed to create project',
             details: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -55,7 +83,7 @@ export const getProjectByIdHandler = async (req: Request, res: Response): Promis
         }
         res.json(project);
     } catch (error) {
-        console.error('Error fetching project:', error);
+        
         if (error instanceof Error) {
             if (error.message === 'User not found') {
                 res.status(404).json({ error: 'User not found' });

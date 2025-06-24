@@ -1,12 +1,13 @@
 import { IProject, ICreateProjectDTO, IUpdateProjectDTO } from '../types/project.types';
 import { db } from '../config/firebase';
+import * as admin from 'firebase-admin';
 
 const COLLECTION_NAME = 'projects';
 const USERS_COLLECTION = 'users';
 
 export const createProject = async (data: ICreateProjectDTO): Promise<IProject> => {
     try {
-        // First verify if user exists in users collection
+        // First verify if user exists and check their plan info
         const userRef = db.collection(USERS_COLLECTION).doc(data.userId);
         const userDoc = await userRef.get();
 
@@ -14,26 +15,86 @@ export const createProject = async (data: ICreateProjectDTO): Promise<IProject> 
             throw new Error('User not found');
         }
 
+        const userData = userDoc.data();
+        if (!userData?.isSubscribed) {
+            throw new Error('User does not have an active subscription');
+        }
+
+        // Check if plan info exists and is valid
+        const planInfo = userData.planInfo;
+        if (!planInfo || !planInfo.features) {
+            throw new Error('Invalid subscription plan');
+        }
+
+        // Check if plan is expired
+        if ( new Date(planInfo.expiresAt) < new Date()) {
+            throw new Error('Subscription plan has expired');
+        }
+
+        // Convert size to number if it's a string
+        const projectSize = typeof data.size === 'string' ? parseFloat(data.size) : data.size;
+
+        // Get current projects count
+        const projectsSnapshot = await db.collection(COLLECTION_NAME)
+            .where('userId', '==', data.userId)
+            .get();
+        const currentProjectsCount = projectsSnapshot.size;
+
+        // Calculate total area of existing projects
+        let totalExistingArea = 0;
+        projectsSnapshot.forEach(doc => {
+            const project = doc.data();
+            totalExistingArea += project.size;
+        });
+
+        // Check project count limit
+        if (typeof planInfo.features.projects === 'number') {
+            if (currentProjectsCount >= planInfo.features.projects) {
+                throw new Error(`Project limit of ${planInfo.features.projects} exceeded for ${planInfo.planName} plan`);
+            }
+        }
+
+        // Extract and check area limit
+        const areaLimitStr = planInfo.features.areaLimit;
+        const areaLimit = parseInt(areaLimitStr.replace(/[^0-9]/g, ''));
+
+        // Check if new project would exceed area limit
+        if (totalExistingArea + projectSize > areaLimit) {
+            throw new Error(`Area limit of ${areaLimit} sq. ft. exceeded for ${planInfo.planName} plan`);
+        }
+
+        // Create the project
         const projectRef = db.collection(COLLECTION_NAME).doc();
         const now = new Date();
-        
-        // Ensure size is a number
-        const size = typeof data.size === 'string' ? parseFloat(data.size) : data.size;
         
         const projectData = {
             id: projectRef.id,
             userId: data.userId,
             title: data.title,
             description: data.description,
-            size: size,
+            size: projectSize,
             projectType: data.projectType,
             buildingConfig: data.buildingConfig,
             address: data.address,
             createdAt: now,
-            updatedAt: now
+            updatedAt: now,
+            planName: planInfo.planName
         };
-        
+
+        // Update user's plan info with remaining values and usage
+        const updateData: Record<string, number> = {
+            'planInfo.features.usedArea': totalExistingArea + projectSize,
+            'planInfo.features.usedProjects': currentProjectsCount + 1,
+            'planInfo.features.remainingArea': areaLimit - (totalExistingArea + projectSize)
+        };
+
+        if (typeof planInfo.features.projects === 'number') {
+            updateData['planInfo.features.remainingProjects'] = planInfo.features.projects - (currentProjectsCount + 1);
+        }
+
+        await userRef.update(updateData);
         await projectRef.set(projectData);
+
         return projectData as IProject;
     } catch (error) {
         console.error('Error in createProject service:', error);
