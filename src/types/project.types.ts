@@ -9,6 +9,8 @@ export interface IProject {
     address: string;
     createdAt: Date;
     updatedAt: Date;
+    purchaseIncharge?: string;
+    purchaseAmount?: number;
 }
 
 export interface ICreateProjectDTO {
@@ -19,6 +21,8 @@ export interface ICreateProjectDTO {
     projectType: string;
     buildingConfig: string;
     address: string;
+    purchaseIncharge?: string;
+    purchaseAmount?: number;
 }
 
 export interface IUpdateProjectDTO extends Partial<ICreateProjectDTO> {} 

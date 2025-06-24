@@ -57,6 +57,7 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       phone: userData.phone,
       gstNumber: userData.gstNumber,
       emailVerified: false,
+      gstVerified: false,
       isSubscribed: false,
       addresses: [initialAddress], // Store address as an array
       createdAt: new Date().toISOString(),

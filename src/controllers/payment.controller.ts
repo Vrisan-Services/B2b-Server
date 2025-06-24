@@ -10,8 +10,8 @@ export const createPaymentLink = async (req: Request, res: Response) => {
       method: 'POST',
       headers: {
         'x-api-version': '2022-09-01',
-        'x-client-id': 'TEST103227535e02d66617da42de391535722301',
-        'x-client-secret': 'cfsk_ma_test_40c4a1584fe88d481b38ec1d130b2801_5f97563d',
+        'x-client-id': process.env.PAYMENT_CASHFREE_APP_ID || '',
+        'x-client-secret': process.env.PAYMENT_CASHFREE_SECRET || '',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

@@ -7,6 +7,7 @@ import userRoutes from './routes/user.routes';
 import waitlistRoutes from './routes/waitlist.routes';
 import subscriptionRoutes from './routes/subscription.routes';
 import paymentRoutes from './routes/payment.routes';
+import gstRoutes from './routes/gst.route';
 dotenv.config();
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/subscribe', subscriptionRoutes);
 app.use('/api', paymentRoutes);
+app.use('/api', gstRoutes);
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);

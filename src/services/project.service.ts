@@ -78,7 +78,9 @@ export const createProject = async (data: ICreateProjectDTO): Promise<IProject> 
             address: data.address,
             createdAt: now,
             updatedAt: now,
-            planName: planInfo.planName
+            planName: planInfo.planName,
+            purchaseIncharge: data.purchaseIncharge,
+            purchaseAmount: data.purchaseAmount,
         };
 
         // Update user's plan info with remaining values and usage
