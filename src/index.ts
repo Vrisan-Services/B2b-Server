@@ -8,6 +8,7 @@ import waitlistRoutes from './routes/waitlist.routes';
 import subscriptionRoutes from './routes/subscription.routes';
 import paymentRoutes from './routes/payment.routes';
 import gstRoutes from './routes/gst.route';
+import crmSubscriptionRoutes from './routes/crm-subscription.routes';
 dotenv.config();
 
 const app = express();
@@ -25,6 +26,7 @@ app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/subscribe', subscriptionRoutes);
 app.use('/api', paymentRoutes);
 app.use('/api', gstRoutes);
+app.use('/api/crm-subscription', crmSubscriptionRoutes);
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);

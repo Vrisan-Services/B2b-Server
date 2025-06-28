@@ -72,9 +72,26 @@ export const setUserPlan = async (
   const planDetails = PLAN_DETAILS[plan];
   const features = { ...planDetails.features };
 
+  // Parse area limit number from string (e.g., "Up to 6,000 sq. ft." -> 6000)
+  const areaLimitMatch = typeof features.areaLimit === 'string'
+    ? features.areaLimit.replace(/[^0-9]/g, '')
+    : '';
+  const areaLimitNum = areaLimitMatch ? parseInt(areaLimitMatch) : 0;
+
+  // Set initial usage/remaining keys
+  features.usedArea = 0;
+  features.usedProjects = 0;
+  features.remainingArea = areaLimitNum;
+  if (typeof features.projects === 'number') {
+    features.remainingProjects = features.projects;
+  }
+
   if (plan === 'enterprise' && options) {
     features.projects = options.projects;
     features.validityDays = options.validityDays;
+    if (typeof options.projects === 'number') {
+      features.remainingProjects = options.projects;
+    }
   }
 
   const subscribedAt = new Date();

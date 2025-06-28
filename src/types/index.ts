@@ -42,6 +42,8 @@ export interface UserData {
   phone: string;
   addresses: Address[];
   gstVerified?: boolean;
+  emailVerified:boolean
+  isSubscribed:boolean
   createdAt: Date;
   updatedAt: Date;
 }
