@@ -282,3 +282,4 @@ export const sendWaitlistSubmissionEmail = async (email:string,fullName:string, 
     return false;
   }
 };
+
