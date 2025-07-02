@@ -93,7 +93,7 @@ export const updateLeadById = async (leadId: string, userId: string, data: Parti
     try {
         const userRef = db.collection(USERS_COLLECTION).doc(userId);
         const userDoc = await userRef.get();
-
+        
         if (!userDoc.exists) {
             throw new Error('User not found');
         }
