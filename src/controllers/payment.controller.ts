@@ -6,7 +6,7 @@ export const createPaymentLink = async (req: Request, res: Response) => {
   try {
     // Generate a unique link_id using userId (if available) and timestamp
     const link_id = `link_${user.userId || 'nouser'}_${Date.now()}`;
-    const response = await fetch('https://sandbox.cashfree.com/pg/links', {
+    const response = await fetch('https://api.cashfree.com/pg/links', {
       method: 'POST',
       headers: {
         'x-api-version': '2022-09-01',
