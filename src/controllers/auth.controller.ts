@@ -8,7 +8,7 @@ import {
   resetPassword as authResetPassword,
   resendOTP as authResendOTP
 } from '../services/auth.service';
-import { UserSignupData, UserLoginData, AuthResponse } from '../types';
+import { UserSignupData, UserLoginData, AuthResponse } from '../types/user.types';
 
 export const signup = async (req: Request<{}, {}, UserSignupData>, res: Response<AuthResponse>) => {
   try {

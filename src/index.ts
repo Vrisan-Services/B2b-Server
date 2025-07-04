@@ -10,6 +10,9 @@ import paymentRoutes from './routes/payment.routes';
 import gstRoutes from './routes/gst.route';
 import crmSubscriptionRoutes from './routes/crm-subscription.routes';
 import leadRoutes from './routes/lead.routes';
+import path from 'path';
+import invoiceRoutes from './routes/invoice.routes';
+import fs from 'fs';
 dotenv.config();
 
 const app = express();
@@ -18,6 +21,8 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Serve uploads folder statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -29,6 +34,7 @@ app.use('/api', paymentRoutes);
 app.use('/api', gstRoutes);
 app.use('/api/crm-subscription', crmSubscriptionRoutes);
 app.use('/api/leads', leadRoutes);
+app.use('/api/invoices', invoiceRoutes);
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
@@ -38,6 +44,12 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     error: err.message
   });
 });
+
+// Ensure uploads/invoices directory exists
+const invoicesDir = path.join(__dirname, '../uploads/invoices');
+if (!fs.existsSync(invoicesDir)) {
+  fs.mkdirSync(invoicesDir, { recursive: true });
+}
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

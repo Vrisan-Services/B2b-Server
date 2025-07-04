@@ -32,6 +32,14 @@ export interface UserLoginData {
   password: string;
 }
 
+export interface BankDetails {
+  accountHolder: string;
+  accountNumber: string;
+  bankName: string;
+  branch: string;
+  ifsc: string;
+}
+
 export interface UserData {
   id: string;
   userId: string;
@@ -44,6 +52,8 @@ export interface UserData {
   gstVerified?: boolean;
   emailVerified:boolean
   isSubscribed:boolean
+  logo?: string;
+  bankDetails?: BankDetails;
   createdAt: Date;
   updatedAt: Date;
 }

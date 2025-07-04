@@ -1,5 +1,5 @@
 import { auth, db } from '../config/firebase';
-import { UserSignupData, UserLoginData, ApiResponse } from '../types';
+import { UserSignupData, UserLoginData, ApiResponse } from '../types/user.types';
 import { sendVerificationEmail, sendLoginOTP } from '../config/email';
 
 // Store OTPs temporarily (in production, use Redis or similar)

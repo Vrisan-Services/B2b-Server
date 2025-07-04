@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { UserData, UpdateProfileData, AddAddressData, UpdateAddressData, ApiResponse } from '../types';
+import { UserData, UpdateProfileData, AddAddressData, UpdateAddressData, ApiResponse, BankDetails } from '../types/user.types';
 
 // Get user profile
 export const getProfile = async (userId: string): Promise<ApiResponse> => {
@@ -159,6 +159,66 @@ export const updateAddress = async (userId: string, addressId: string, addressDa
     return {
       success: false,
       message: 'Error updating address',
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+};
+
+// Update user logo
+export const updateUserLogo = async (userId: string, logoPath: string): Promise<ApiResponse> => {
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      return {
+        success: false,
+        message: 'User not found'
+      };
+    }
+
+    await userRef.update({
+      logo: logoPath,
+      updatedAt: new Date().toISOString()
+    });
+
+    return {
+      success: true,
+      message: 'Logo updated successfully',
+      data: { logo: logoPath }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Error updating logo',
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+};
+
+export const updateUserBankDetails = async (userId: string, bankDetails: BankDetails): Promise<ApiResponse> => {
+  try {
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      return {
+        success: false,
+        message: 'User not found'
+      };
+    }
+    await userRef.update({
+      bankDetails,
+      updatedAt: new Date().toISOString()
+    });
+    return {
+      success: true,
+      message: 'Bank details updated successfully',
+      data: { bankDetails }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Error updating bank details',
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
   }

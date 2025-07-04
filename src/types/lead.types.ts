@@ -9,6 +9,8 @@ export interface ILead {
     source: string;
     status: 'Converted' | 'Initial';
     remarks: string;
+    city: string;
+    state: string;
     createdAt: Date;
     userId: string;
 }
@@ -23,6 +25,8 @@ export interface ICreateLeadDTO {
     source: string;
     status: 'Converted' | 'Initial';
     remarks: string;
+    city: string;
+    state: string;
     userId: string;
 }
 
@@ -36,4 +40,6 @@ export interface IUpdateLeadDTO {
     source?: string;
     status?: 'Converted' | 'Initial';
     remarks?: string;
+    city?: string;
+    state?: string;
 } 
