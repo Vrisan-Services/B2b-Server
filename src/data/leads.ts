@@ -15,6 +15,19 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       state: "Karnataka"
     },
     {
+      name: "Rajesh Kumar ghosh",
+      email: "rajesh.kumarghosh@dreamhomes.in",
+      phone: "+91-9876543210",
+      company: "Dream Homes Pvt Ltd",
+      type: "Architecture",
+      value: "₹18,50,000",
+      source: "Website",
+      status: "Converted",
+      remarks: "Interested in residential project design",
+      city: "Bangalore",
+      state: "Karnataka"
+    },
+    {
       name: "Priya Sharma",
       email: "priya.sharma@modernliving.co.in",
       phone: "+91-8765432109",

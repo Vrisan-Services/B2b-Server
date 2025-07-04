@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createMultipleLeads, getLeadsByUserId, updateLeadById } from '../services/lead.service';
+import { createMultipleLeads, getLeadsByUserId, updateLeadById, getDashboardStats } from '../services/lead.service';
 import { leads as dummyLeads } from '../data/leads';
 import { IUpdateLeadDTO } from '../types/lead.types';
 
@@ -78,5 +78,19 @@ export const updateLeadHandler = async (req: Request, res: Response): Promise<vo
                 details: 'Unknown error occurred'
             });
         }
+    }
+};
+
+export const getDashboardStatsHandler = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            res.status(400).json({ error: 'Missing userId' });
+            return;
+        }
+        const stats = await getDashboardStats(userId);
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch dashboard stats' });
     }
 }; 

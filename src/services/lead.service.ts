@@ -70,13 +70,13 @@ export const createMultipleLeads = async (leads: Omit<ICreateLeadDTO, 'userId'>[
         if (createdLeads.length > 0) {
             await batch.commit();
         }
-        
-        return createdLeads;
+        // Fetch and return all leads for the user from the db
+        return await getLeadsByUserId(userId);
     } catch (error) {
         console.error('Error in createMultipleLeads service:', error);
         throw new Error(`Failed to create leads: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-};
+}; 
 
 export const getLeadsByUserId = async (userId: string): Promise<ILead[]> => {
     const leadsSnapshot = await db.collection(LEADS_COLLECTION)
@@ -119,4 +119,32 @@ export const updateLeadById = async (leadId: string, userId: string, data: Parti
         console.error('Error in updateLeadById service:', error);
         throw new Error(`Failed to update lead: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+};
+
+export const getDashboardStats = async (userId: string) => {
+    const leadsSnapshot = await db.collection(LEADS_COLLECTION)
+        .where('userId', '==', userId)
+        .get();
+    const leads = leadsSnapshot.docs.map(doc => doc.data() as ILead);
+
+    // Revenue: sum of value for converted leads
+    const revenue = leads
+        .filter(lead => lead.status === 'Converted')
+        .reduce((sum, lead) => {
+            // Remove non-numeric chars and parse value
+            const numericValue = Number((lead.value || '').replace(/[^\d]/g, ''));
+            return sum + (isNaN(numericValue) ? 0 : numericValue);
+        }, 0);
+
+    // Customers: count of unique emails
+    const customers = new Set(leads.map(lead => lead.email)).size;
+
+    // Quotation Sent: count of leads with status 'Converted'
+    const quotationSent = leads.filter(lead => lead.status === 'Converted').length;
+
+    return {
+        revenue,
+        customers,
+        quotationSent
+    };
 };
