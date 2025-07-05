@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 
 export const createPaymentLink = async (req: Request, res: Response) => {
   const { user, plan, amount } = req.body;
+ 
   try {
     // Generate a unique link_id using userId (if available) and timestamp
     const link_id = `link_${user.userId || 'nouser'}_${Date.now()}`;
@@ -29,13 +30,14 @@ export const createPaymentLink = async (req: Request, res: Response) => {
           send_sms: false
         },
         link_meta: {
-          return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/#/payment-success?plan=${plan}`
+          return_url: `${process.env.FRONTEND_URL || 'https://b2b-dashboard.designelementary.com'}/#/payment-success?plan=${plan}`
         }
       })
     });
     const data = await response.json();
     res.json(data);
   } catch (err) {
+    console.log(err)
     res.status(500).json({ error: 'Failed to create payment link' });
   }
 }; 

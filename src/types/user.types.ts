@@ -52,6 +52,9 @@ export interface UserData {
   gstVerified?: boolean;
   emailVerified:boolean
   isSubscribed:boolean
+  isCrmSubscribed?: boolean;
+  planInfo?: any;
+  CRMplanInfo?: any;
   logo?: string;
   bankDetails?: BankDetails;
   createdAt: Date;

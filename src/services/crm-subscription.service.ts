@@ -6,8 +6,8 @@ const PLAN_DETAILS: Record<PlanType, { name: string; price: number | string; fea
     name: 'Achipreneur',
     price: 4999,
     features: {
-      freshLeadsPerMonth: 20,
-      welcomeBonusLeads: 10,
+      freshLeadsPerMonth: 15,
+      welcomeBonusLeads: 5,
       crmAccess: true,
       proposalsAndInvoicing: true,
       loanAssistance: true,
@@ -19,8 +19,8 @@ const PLAN_DETAILS: Record<PlanType, { name: string; price: number | string; fea
     name: 'custom',
     price: 'custom',
     features: {
-      freshLeadsPerMonth: 100,
-      welcomeBonusLeads: 50,
+      freshLeadsPerMonth: 40,
+      welcomeBonusLeads: 10,
       crmAccess: true,
       proposalsAndInvoicing: true,
       loanAssistance: true,

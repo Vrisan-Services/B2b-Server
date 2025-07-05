@@ -59,6 +59,7 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       emailVerified: false,
       gstVerified: false,
       isSubscribed: false,
+      isCrmSubscribed:false,
       addresses: [initialAddress], // Store address as an array
       createdAt: new Date().toISOString(),
     });

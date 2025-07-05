@@ -40,14 +40,11 @@ export const createMultipleLeads = async (leads: Omit<ICreateLeadDTO, 'userId'>[
             throw new Error('User not found');
         }
 
-        const incomingLeadEmails = leads.map(lead => lead.email);
-
-        const leadsQuery = await db.collection(LEADS_COLLECTION)
+        // Fetch all existing leads for the user
+        const allUserLeadsSnapshot = await db.collection(LEADS_COLLECTION)
             .where('userId', '==', userId)
-            .where('email', 'in', incomingLeadEmails)
             .get();
-
-        const existingLeadEmails = new Set(leadsQuery.docs.map(doc => doc.data().email));
+        const existingLeadEmails = new Set(allUserLeadsSnapshot.docs.map(doc => doc.data().email));
 
         const batch = db.batch();
         const createdLeads: ILead[] = [];
