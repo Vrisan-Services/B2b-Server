@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createMultipleLeads, getLeadsByUserId, updateLeadById, getDashboardStats } from '../services/lead.service';
+import { createMultipleLeads, getLeadsByUserId, updateLeadById, getDashboardStats, getMonthlyBudgetData, getCustomerGrowthData, getCitywiseProjectsData } from '../services/lead.service';
 import { leads as dummyLeads } from '../data/leads';
 import { IUpdateLeadDTO } from '../types/lead.types';
 
@@ -92,5 +92,59 @@ export const getDashboardStatsHandler = async (req: Request, res: Response): Pro
         res.json(stats);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+    }
+};
+
+export const getMonthlyBudgetDataHandler = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            res.status(400).json({ error: 'Missing userId' });
+            return;
+        }
+        const monthlyData = await getMonthlyBudgetData(userId);
+        res.json(monthlyData);
+    } catch (error) {
+        console.error('Error fetching monthly budget data:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch monthly budget data',
+            details: error instanceof Error ? error.message : 'Unknown error occurred'
+        });
+    }
+};
+
+export const getCustomerGrowthDataHandler = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            res.status(400).json({ error: 'Missing userId' });
+            return;
+        }
+        const customerGrowthData = await getCustomerGrowthData(userId);
+        res.json(customerGrowthData);
+    } catch (error) {
+        console.error('Error fetching customer growth data:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch customer growth data',
+            details: error instanceof Error ? error.message : 'Unknown error occurred'
+        });
+    }
+};
+
+export const getCitywiseProjectsDataHandler = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            res.status(400).json({ error: 'Missing userId' });
+            return;
+        }
+        const citywiseProjectsData = await getCitywiseProjectsData(userId);
+        res.json(citywiseProjectsData);
+    } catch (error) {
+        console.error('Error fetching citywise projects data:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch citywise projects data',
+            details: error instanceof Error ? error.message : 'Unknown error occurred'
+        });
     }
 }; 

@@ -11,7 +11,7 @@ export interface ILead {
     remarks: string;
     city: string;
     state: string;
-    createdAt: Date;
+    createdAt: Date | any; // Allow Firestore Timestamp
     userId: string;
 }
 
@@ -27,6 +27,7 @@ export interface ICreateLeadDTO {
     remarks: string;
     city: string;
     state: string;
+    createdAt: Date;
     userId: string;
 }
 
