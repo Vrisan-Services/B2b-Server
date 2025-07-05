@@ -108,10 +108,26 @@ export const getProjectsByUserIdHandler = async (req: Request, res: Response): P
     try {
         const { userId } = req.params;
 
+        if (!userId) {
+            res.status(400).json({ error: 'userId parameter is required' });
+            return;
+        }
+
         const projects = await getProjectsByUserId(userId);
         res.json(projects);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch user projects' });
+        console.error('Error fetching user projects:', error);
+        if (error instanceof Error) {
+            res.status(500).json({
+                error: 'Failed to fetch user projects',
+                details: error.message
+            });
+        } else {
+            res.status(500).json({
+                error: 'Failed to fetch user projects',
+                details: 'Unknown error occurred'
+            });
+        }
     }
 };
 

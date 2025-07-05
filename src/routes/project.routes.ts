@@ -4,7 +4,8 @@ import {
     getProjectByIdHandler,
     getAllProjectsHandler,
     updateProjectHandler,
-    deleteProjectHandler
+    deleteProjectHandler,
+    getProjectsByUserIdHandler
 } from '../controllers/project.controller';
 
 const router = Router();
@@ -14,6 +15,9 @@ router.post('/', createProjectHandler);
 
 // Get all projects
 router.get('/', getAllProjectsHandler);
+
+// Get projects by user ID
+router.get('/user/:userId', getProjectsByUserIdHandler);
 
 // Get project by ID
 router.get('/:id', getProjectByIdHandler);
