@@ -12,7 +12,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Converted",
       remarks: "Interested in residential project design",
       city: "Bangalore",
-      state: "Karnataka"
+      state: "Karnataka",
+      createdAt: new Date("2024-01-15")
     },
     {
       name: "Rajesh Kumar ghosh",
@@ -25,7 +26,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Converted",
       remarks: "Interested in residential project design",
       city: "Bangalore",
-      state: "Karnataka"
+      state: "Karnataka",
+      createdAt: new Date("2024-01-20")
     },
     {
       name: "Priya Sharma",
@@ -38,7 +40,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Initial",
       remarks: "Follow up scheduled for next week",
       city: "Hyderabad",
-      state: "Telangana"
+      state: "Telangana",
+      createdAt: new Date("2024-02-05")
     },
     {
       name: "Amit Patel",
@@ -51,7 +54,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Initial",
       remarks: "Initial contact made, awaiting response",
       city: "Ahmedabad",
-      state: "Gujarat"
+      state: "Gujarat",
+      createdAt: new Date("2024-02-12")
     },
     {
       name: "Deepika Singh",
@@ -64,7 +68,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Converted",
       remarks: "High-value prospect, luxury segment",
       city: "Mumbai",
-      state: "Maharashtra"
+      state: "Maharashtra",
+      createdAt: new Date("2024-02-18")
     },
     {
       name: "Vikash Agarwal",
@@ -77,7 +82,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Initial",
       remarks: "Retail project discussion in progress",
       city: "Kolkata",
-      state: "West Bengal"
+      state: "West Bengal",
+      createdAt: new Date("2024-03-01")
     },
     {
       name: "Kavita Reddy",
@@ -90,7 +96,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Converted",
       remarks: "Premium residential interior project",
       city: "Chennai",
-      state: "Tamil Nadu"
+      state: "Tamil Nadu",
+      createdAt: new Date("2024-03-08")
     },
     {
       name: "Rohit Gupta",
@@ -103,7 +110,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Initial",
       remarks: "Commercial office space requirement",
       city: "Pune",
-      state: "Maharashtra"
+      state: "Maharashtra",
+      createdAt: new Date("2024-03-15")
     },
     {
       name: "Sneha Joshi",
@@ -116,7 +124,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Initial",
       remarks: "Consultation meeting scheduled",
       city: "Bangalore",
-      state: "Karnataka"
+      state: "Karnataka",
+      createdAt: new Date("2024-03-22")
     },
     {
       name: "Arjun Mehta",
@@ -129,7 +138,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Converted",
       remarks: "Healthcare facility design project",
       city: "Delhi",
-      state: "Delhi"
+      state: "Delhi",
+      createdAt: new Date("2024-04-01")
     },
     {
       name: "Anita Verma",
@@ -142,7 +152,8 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Initial",
       remarks: "Educational institution interior design",
       city: "Lucknow",
-      state: "Uttar Pradesh"
+      state: "Uttar Pradesh",
+      createdAt: new Date("2024-04-10")
     },
     {
       name: "Sudipto Das",
@@ -155,6 +166,7 @@ export const leads: Omit<ICreateLeadDTO, 'userId'>[] = [
       status: "Initial",
       remarks: "Educational institution interior design",
       city: "Bangalore",
-      state: "Karnataka"
+      state: "Karnataka",
+      createdAt: new Date("2024-04-15")
     }
   ]; 
