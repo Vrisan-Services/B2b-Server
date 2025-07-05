@@ -16,29 +16,56 @@ export const createProject = async (data: ICreateProjectDTO): Promise<IProject> 
         }
 
         const userData = userDoc.data();
+        
+        // Get current projects count
+        const projectsSnapshot = await db.collection(COLLECTION_NAME)
+            .where('userId', '==', data.userId)
+            .get();
+        const currentProjectsCount = projectsSnapshot.size;
+
+        // Allow 1 free project without subscription
         if (!userData?.isSubscribed) {
-            throw new Error('User does not have an active subscription');
+            if (currentProjectsCount >= 1) {
+                throw new Error('You have reached your free project limit. Please subscribe to create more projects.');
+            }
+            
+            // Create the free project
+            const projectRef = db.collection(COLLECTION_NAME).doc();
+            const now = new Date();
+            
+            const projectData = {
+                id: projectRef.id,
+                userId: data.userId,
+                title: data.title,
+                description: data.description,
+                size: typeof data.size === 'string' ? parseFloat(data.size) : data.size,
+                projectType: data.projectType,
+                buildingConfig: data.buildingConfig,
+                address: data.address,
+                createdAt: now,
+                updatedAt: now,
+                planName: 'free',
+                purchaseIncharge: data.purchaseIncharge,
+                purchaseAmount: data.purchaseAmount,
+            };
+
+            await projectRef.set(projectData);
+            return projectData as IProject;
         }
 
-        // Check if plan info exists and is valid
+        // For subscribed users, check their plan info
         const planInfo = userData.planInfo;
         if (!planInfo || !planInfo.features) {
             throw new Error('Invalid subscription plan');
         }
 
         // Check if plan is expired
-        if ( new Date(planInfo.expiresAt) < new Date()) {
+        if (new Date(planInfo.expiresAt) < new Date()) {
             throw new Error('Subscription plan has expired');
         }
 
         // Convert size to number if it's a string
         const projectSize = typeof data.size === 'string' ? parseFloat(data.size) : data.size;
-
-        // Get current projects count
-        const projectsSnapshot = await db.collection(COLLECTION_NAME)
-            .where('userId', '==', data.userId)
-            .get();
-        const currentProjectsCount = projectsSnapshot.size;
 
         // Calculate total area of existing projects
         let totalExistingArea = 0;
