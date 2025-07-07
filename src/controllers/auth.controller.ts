@@ -6,7 +6,9 @@ import {
   verifyLoginOTP as verifyLoginOTPService,
   forgotPassword as authForgotPassword,
   resetPassword as authResetPassword,
-  resendOTP as authResendOTP
+  resendOTP as authResendOTP,
+  sendPhoneLoginOTP,
+  verifyPhoneLoginOTP
 } from '../services/auth.service';
 import { UserSignupData, UserLoginData, AuthResponse } from '../types/user.types';
 
@@ -98,5 +100,23 @@ export const resendOTP = async (req: Request<{}, {}, { email: string; type: 'sig
       message: 'Internal server error',
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     });
+  }
+};
+
+export const sendPhoneOTP = async (req: Request<{}, {}, { phone: string }>, res: Response<AuthResponse>) => {
+  try {
+    const result = await sendPhoneLoginOTP(req.body.phone);
+    return res.status(result.success ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error occurred' });
+  }
+};
+
+export const verifyPhoneOTP = async (req: Request<{}, {}, { phone: string; otp: string }>, res: Response<AuthResponse>) => {
+  try {
+    const result = await verifyPhoneLoginOTP(req.body.phone, req.body.otp);
+    return res.status(result.success ? 200 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error occurred' });
   }
 }; 

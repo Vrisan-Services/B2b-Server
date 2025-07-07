@@ -1,9 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from '../config/firebase';
 
-
 export const gstVerification = async (req: Request, res: Response) => {
-
     try {
         const { GSTIN, business_name } = req.body;
 
@@ -28,7 +26,9 @@ export const gstVerification = async (req: Request, res: Response) => {
             })
         };
 
-        const response = await fetch('https://sandbox.cashfree.com/verification/gstin', options);
+        const url = process.env.GST_CASHFREE_URL || 'https://sandbox.cashfree.com/verification/gstin';
+
+        const response = await fetch(url, options);
 
         if (!response.ok) {
             throw new Error(`API request failed with status: ${response.status}`);
@@ -53,7 +53,6 @@ export const gstVerification = async (req: Request, res: Response) => {
         });
 
     } catch (error) {
-
         return res.status(500).json({
             success: false,
             message: 'Internal server error during GST verification',
