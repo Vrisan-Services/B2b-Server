@@ -28,7 +28,7 @@ export const gstVerification = async (req: Request, res: Response) => {
             })
         };
 
-        const response = await fetch('https://api.cashfree.com/verification/gstin', options);
+        const response = await fetch(process.env.GST_CASHFREE_URL as string, options);
 
         if (!response.ok) {
             throw new Error(`API request failed with status: ${response.status}`);
