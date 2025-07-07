@@ -5,13 +5,14 @@ export const gstVerification = async (req: Request, res: Response) => {
     try {
         const { GSTIN, business_name } = req.body;
 
-        // Validate required fields
         if (!GSTIN) {
             return res.status(400).json({
                 success: false,
                 message: 'GSTIN is required'
             });
         }
+
+        const url = process.env.GST_CASHFREE_URL || 'https://sandbox.cashfree.com/verification/gstin';
 
         const options = {
             method: 'POST',
@@ -21,12 +22,10 @@ export const gstVerification = async (req: Request, res: Response) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                GSTIN: GSTIN,
+                GSTIN,
                 business_name: business_name || ''
             })
         };
-
-        const url = process.env.GST_CASHFREE_URL || 'https://sandbox.cashfree.com/verification/gstin';
 
         const response = await fetch(url, options);
 
@@ -49,7 +48,7 @@ export const gstVerification = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             success: true,
-            data: data
+            data
         });
 
     } catch (error) {

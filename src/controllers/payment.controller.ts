@@ -5,7 +5,7 @@ export const createPaymentLink = async (req: Request, res: Response) => {
   const { user, plan, amount } = req.body;
 
   try {
-    const userIdShort = (user.userId || 'nouser').toString().slice(0, 16); // max 16 chars
+    const userIdShort = (user.userId || 'nouser').toString().slice(0, 16);
     const reference_id = `lnk_${userIdShort}_${Date.now().toString().slice(-8)}`.slice(0, 40);
 
     const paymentUrl = (process.env.BASE_RZP_URL || 'https://api.razorpay.com/v1') + '/payment_links';
@@ -17,7 +17,7 @@ export const createPaymentLink = async (req: Request, res: Response) => {
       throw new Error('Razorpay environment variables are not set');
     }
 
-    const amountPaise = Math.round(Number(amount) * 100); // Razorpay uses paise
+    const amountPaise = Math.round(Number(amount) * 100);
 
     const body = {
       amount: amountPaise,
@@ -52,7 +52,7 @@ export const createPaymentLink = async (req: Request, res: Response) => {
       return res.status(response.status).json({ error: data.error || 'Failed to create payment link' });
     }
 
-    res.json({ ...data, link_url: data.short_url }); // link_url = frontend-compatible
+    res.json({ ...data, link_url: data.short_url });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create payment link' });
