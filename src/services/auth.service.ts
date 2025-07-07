@@ -1,6 +1,7 @@
 import { auth, db } from '../config/firebase';
 import { UserSignupData, UserLoginData, ApiResponse } from '../types/user.types';
 import { sendVerificationEmail, sendLoginOTP } from '../config/email';
+import { sendSMS } from '../config/sms';
 
 // Store OTPs temporarily (in production, use Redis or similar)
 const otpStore: { [key: string]: { otp: string; expires: number } } = {};
@@ -12,6 +13,12 @@ const generateOTP = (): string => {
 
 export const signup = async (userData: UserSignupData): Promise<ApiResponse> => {
   try {
+    // Add +91 prefix to phone if not present
+    let phoneWithPrefix = userData.phone;
+    if (!phoneWithPrefix.startsWith('+91')) {
+      phoneWithPrefix = '+91' + phoneWithPrefix.replace(/^\+?91/, '').replace(/\D/g, '');
+    }
+
     // Create user in Firebase Auth
     const userRecord = await auth.createUser({
       email: userData.email,
@@ -54,9 +61,10 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       contactPerson: userData.contactPerson,
       designation: userData.designation,
       email: userData.email,
-      phone: userData.phone,
+      phone: phoneWithPrefix,
       gstNumber: userData.gstNumber,
       emailVerified: false,
+      phoneVerified: false,
       gstVerified: false,
       isSubscribed: false,
       isCrmSubscribed:false,
@@ -120,40 +128,65 @@ export const verifyEmail = async (email: string, otp: string): Promise<ApiRespon
 
 export const login = async (loginData: UserLoginData): Promise<ApiResponse> => {
   try {
-    const userRecord = await auth.getUserByEmail(loginData.email);
-    
-    if (!userRecord.emailVerified) {
-      return {
-        success: false,
-        message: 'Please verify your email first'
-      };
-    }
+    let userRecord: any = null;
+    let userDoc: any = null;
+    let loginType: 'email' | 'phone' = 'email';
+    let identifier = loginData.email;
 
-    const userDoc = await db.collection('users').doc(userRecord.uid).get();
-    
-    if (!userDoc.exists) {
-      throw new Error('User not found');
+    // Check if input is a phone number (contains only digits or starts with +91)
+    const phoneRegex = /^\+?91?\d{10}$/;
+    if (phoneRegex.test(loginData.email)) {
+      loginType = 'phone';
+      // Ensure +91 prefix
+      let phoneWithPrefix = loginData.email;
+      if (!phoneWithPrefix.startsWith('+91')) {
+        phoneWithPrefix = '+91' + phoneWithPrefix.replace(/^\+?91/, '').replace(/\D/g, '');
+      }
+      identifier = phoneWithPrefix;
+      // Find user by phone in Firestore
+      const userQuery = await db.collection('users').where('phone', '==', phoneWithPrefix).get();
+      if (userQuery.empty) {
+        return { success: false, message: 'User not found' };
+      }
+      userDoc = userQuery.docs[0];
+      userRecord = { uid: userDoc.id, ...userDoc.data() };
+      // If phoneVerified is not true, set it true on OTP verification (handled in verifyPhoneLoginOTP)
+    } else {
+      // Email login
+      userRecord = await auth.getUserByEmail(loginData.email);
+      if (!userRecord.emailVerified) {
+        return {
+          success: false,
+          message: 'Please verify your email first'
+        };
+      }
+      userDoc = await db.collection('users').doc(userRecord.uid).get();
+      if (!userDoc.exists) {
+        throw new Error('User not found');
+      }
     }
 
     // Generate and send OTP
     const otp = generateOTP();
     const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    otpStore[identifier] = { otp, expires };
 
-    // Store OTP
-    otpStore[loginData.email] = { otp, expires };
-
-    // Send OTP email
-    const emailSent = await sendLoginOTP(loginData.email, otp);
-    if (!emailSent) {
+    let otpSent = false;
+    if (loginType === 'email') {
+      otpSent = await sendLoginOTP(loginData.email, otp);
+    } else {
+      otpSent = await sendSMS(identifier, `Your OTP is: ${otp}`);
+    }
+    if (!otpSent) {
       throw new Error('Failed to send OTP');
     }
 
     return {
       success: true,
-      message: 'OTP sent to your email',
+      message: 'OTP sent to your ' + (loginType === 'email' ? 'email' : 'phone'),
       data: {
         uid: userRecord.uid,
-        email: loginData.email
+        [loginType]: identifier
       }
     };
   } catch (error: any) {
@@ -324,5 +357,47 @@ export const resendOTP = async (email: string, type: 'signup' | 'login' | 'forgo
       message: 'Error during OTP resend',
       error: error.message
     };
+  }
+};
+
+// Send OTP to phone
+export const sendPhoneLoginOTP = async (phone: string): Promise<ApiResponse> => {
+  try {
+    const otp = generateOTP();
+    const expires = Date.now() + 10 * 60 * 1000;
+    otpStore[phone] = { otp, expires };
+
+    const smsSent = await sendSMS(phone, `Your OTP is: ${otp}`);
+    if (!smsSent) throw new Error('Failed to send OTP SMS');
+
+    return { success: true, message: 'OTP sent to your phone' };
+  } catch (error: any) {
+    return { success: false, message: 'Error sending OTP', error: error.message };
+  }
+};
+
+export const verifyPhoneLoginOTP = async (phone: string, otp: string): Promise<ApiResponse> => {
+  try {
+    const storedOTP = otpStore[phone];
+    if (!storedOTP || storedOTP.expires < Date.now()) {
+      return { success: false, message: 'OTP expired or invalid' };
+    }
+    if (storedOTP.otp !== otp) {
+      return { success: false, message: 'Invalid OTP' };
+    }
+
+    // Find user by phone in Firestore
+    const userQuery = await db.collection('users').where('phone', '==', phone).get();
+    if (userQuery.empty) return { success: false, message: 'User not found' };
+    const userDoc = userQuery.docs[0];
+
+    // Set phoneVerified true
+    await db.collection('users').doc(userDoc.id).update({ phoneVerified: true });
+
+    delete otpStore[phone];
+
+    return { success: true, message: 'phone verify successful', data: { uid: userDoc.id, ...userDoc.data() } };
+  } catch (error: any) {
+    return { success: false, message: 'Error during OTP verification', error: error.message };
   }
 }; 

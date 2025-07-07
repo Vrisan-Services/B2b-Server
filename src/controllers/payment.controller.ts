@@ -7,12 +7,25 @@ export const createPaymentLink = async (req: Request, res: Response) => {
   try {
     // Generate a unique link_id using userId (if available) and timestamp
     const link_id = `link_${user.userId || 'nouser'}_${Date.now()}`;
-    const response = await fetch('https://api.cashfree.com/pg/links', {
+    // It is generally safe to use environment variables for server-to-server API calls,
+    // as long as you do not expose them to the client/browser.
+    // Here, the env vars are only used on the server side and not sent to the frontend.
+
+    const paymentUrl = process.env.PAYMENT_CASHFREE_URL;
+    const clientId = process.env.PAYMENT_CASHFREE_APP_ID;
+    const clientSecret = process.env.PAYMENT_CASHFREE_SECRET;
+    const frontendUrl = 'http://localhost:5173';
+
+    if (!paymentUrl || !clientId || !clientSecret) {
+      throw new Error('Payment provider environment variables are not set');
+    }
+
+    const response = await fetch(paymentUrl, {
       method: 'POST',
       headers: {
         'x-api-version': '2022-09-01',
-        'x-client-id': process.env.PAYMENT_CASHFREE_APP_ID || '',
-        'x-client-secret': process.env.PAYMENT_CASHFREE_SECRET || '',
+        'x-client-id': clientId,
+        'x-client-secret': clientSecret,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -30,7 +43,7 @@ export const createPaymentLink = async (req: Request, res: Response) => {
           send_sms: false
         },
         link_meta: {
-          return_url: `${process.env.FRONTEND_URL || 'https://b2b-dashboard.designelementary.com'}/#/payment-success?plan=${plan}`
+          return_url: `${frontendUrl}/#/payment-success?plan=${plan}`
         }
       })
     });
