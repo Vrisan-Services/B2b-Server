@@ -5,7 +5,6 @@ export const createPaymentLink = async (req: Request, res: Response) => {
   const { user, plan, amount } = req.body;
 
   try {
-    // Generate a unique reference_id using userId (if available) and timestamp, max 40 chars
     const userIdShort = (user.userId || 'nouser').toString().slice(0, 16); // max 16 chars
     const reference_id = `lnk_${userIdShort}_${Date.now().toString().slice(-8)}`.slice(0, 40);
 
@@ -18,8 +17,7 @@ export const createPaymentLink = async (req: Request, res: Response) => {
       throw new Error('Razorpay environment variables are not set');
     }
 
-    // Razorpay expects amount in paise (integer)
-    const amountPaise = Math.round(Number(amount) * 100);
+    const amountPaise = Math.round(Number(amount) * 100); // Razorpay uses paise
 
     const body = {
       amount: amountPaise,
@@ -44,7 +42,7 @@ export const createPaymentLink = async (req: Request, res: Response) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64'),
+        Authorization: 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64'),
       },
       body: JSON.stringify(body),
     });
@@ -53,29 +51,33 @@ export const createPaymentLink = async (req: Request, res: Response) => {
     if (!response.ok) {
       return res.status(response.status).json({ error: data.error || 'Failed to create payment link' });
     }
-    // Return the payment link as link_url for frontend compatibility
-    res.json({ ...data, link_url: data.short_url });
+
+    res.json({ ...data, link_url: data.short_url }); // link_url = frontend-compatible
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ error: 'Failed to create payment link' });
   }
 };
 
 export const verifyPayment = async (req: Request, res: Response) => {
   const { paymentId } = req.body;
+
   try {
-    const paymentUrl = `${process.env.BASE_RZP_URL}/payments/${paymentId}`;
+    const paymentUrl = `${process.env.BASE_RZP_URL || 'https://api.razorpay.com/v1'}/payments/${paymentId}`;
     const keyId = process.env.RZP_KEY_ID;
     const keySecret = process.env.RZP_KEY_SECRET;
+
     if (!paymentId || !keyId || !keySecret) {
       return res.status(400).json({ success: false, message: 'Missing paymentId or Razorpay credentials' });
     }
+
     const response = await fetch(paymentUrl, {
       method: 'GET',
       headers: {
-        'Authorization': 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64'),
+        Authorization: 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64'),
       },
     });
+
     const data = await response.json();
     if (response.ok && (data.status === 'captured' || data.status === 'authorized')) {
       return res.json({ success: true, payment: data });
@@ -86,4 +88,4 @@ export const verifyPayment = async (req: Request, res: Response) => {
     console.error(err);
     return res.status(500).json({ success: false, message: 'Payment verification failed' });
   }
-}; 
+};
