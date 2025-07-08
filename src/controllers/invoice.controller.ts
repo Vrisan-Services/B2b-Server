@@ -52,7 +52,11 @@ export const uploadInvoice = async (req: Request, res: Response) => {
 
 export const getInvoices = async (req: Request, res: Response) => {
   try {
-    const snapshot = await db.collection('invoices').get();
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Missing userId in query' });
+    }
+    const snapshot = await db.collection('invoices').where('userId', '==', userId).get();
     const invoices: Invoice[] = snapshot.docs.map(doc => {
       const data = doc.data();
       return {
