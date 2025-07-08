@@ -1,3 +1,8 @@
+export interface IRemarkEntry {
+  text: string;
+  date: Date;
+}
+
 export interface ILead {
     id: string;
     name: string;
@@ -7,8 +12,8 @@ export interface ILead {
     type: 'Architecture' | 'Interior';
     value: string;
     source: string;
-    status: 'Converted' | 'Initial';
-    remarks: string;
+    status: 'Converted' | 'Fresh'|'Follow-up'|'Lost' ;
+    remarks: IRemarkEntry[];
     city: string;
     state: string;
     createdAt: Date | any; // Allow Firestore Timestamp
@@ -23,8 +28,8 @@ export interface ICreateLeadDTO {
     type: 'Architecture' | 'Interior';
     value: string;
     source: string;
-    status: 'Converted' | 'Initial';
-    remarks: string;
+    status: 'Converted' | 'Fresh'|'Follow-up'|'Lost';
+    remarks: IRemarkEntry[];
     city: string;
     state: string;
     createdAt: Date;
@@ -39,8 +44,8 @@ export interface IUpdateLeadDTO {
     type?: 'Architecture' | 'Interior';
     value?: string;
     source?: string;
-    status?: 'Converted' | 'Initial';
-    remarks?: string;
+    status?: 'Converted' | 'Fresh'|'Follow-up'|'Lost';
+    remarks?: IRemarkEntry[];
     city?: string;
     state?: string;
 } 
