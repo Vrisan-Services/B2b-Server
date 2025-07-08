@@ -115,6 +115,27 @@ export const uploadLogo = async (req: Request, res: Response<ApiResponse>) => {
       });
     }
 
+    // Fetch current user profile to get existing logo URL
+    const userDoc = await (await import('../config/firebase')).db.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      if (userData && userData.logo) {
+        try {
+          // Extract the path after the bucket domain
+          const logoUrl = userData.logo;
+          const bucketDomain = `https://storage.googleapis.com/${bucket.name}/`;
+          if (logoUrl.startsWith(bucketDomain)) {
+            const filePath = logoUrl.substring(bucketDomain.length);
+            // Delete the old logo file from the bucket
+            await bucket.file(filePath).delete();
+          }
+        } catch (err) {
+          // Log but do not block upload if delete fails
+          console.error('Failed to delete previous logo:', err);
+        }
+      }
+    }
+
     // Upload file to Firebase Storage
     const destination = `logos/${userId}/${req.file.originalname}`;
     const file = bucket.file(destination);
