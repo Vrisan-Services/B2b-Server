@@ -2,6 +2,7 @@ import { auth, db } from '../config/firebase';
 import { UserSignupData, UserLoginData, ApiResponse } from '../types/user.types';
 import { sendVerificationEmail, sendLoginOTP } from '../config/email';
 import { sendSMS } from '../config/sms';
+import fetch from 'node-fetch';
 
 // Store OTPs temporarily (in production, use Redis or similar)
 const otpStore: { [key: string]: { otp: string; expires: number } } = {};
@@ -18,6 +19,32 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
     if (!phoneWithPrefix.startsWith('+91')) {
       phoneWithPrefix = '+91' + phoneWithPrefix.replace(/^\+?91/, '').replace(/\D/g, '');
     }
+
+    // Call Architex API to create user
+    const architexUrl = `${process.env.ARCHITEX_CUST_URL}/custTable/signup`;
+    const architexPayload = {
+      Name: userData.contactPerson, // or orgName if needed
+      Phone: userData.phone.replace(/^[+]?91/, '').replace(/\D/g, '').slice(-10),
+      PCode: '+91',
+      City: userData.city,
+      ZipCode: userData.pincode,
+      Email: userData.email,
+      CustGroup: 'B2B',
+    };
+    const architexRes = await fetch(architexUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(architexPayload),
+    });
+    const architexData = await architexRes.json();
+    if (!architexRes.ok || !architexData.data || !architexData.data.AccountNum) {
+      return {
+        success: false,
+        message: 'Failed to create user in Architex',
+        error: architexData.message || 'Architex API error',
+      };
+    }
+    const architexAccountNum = architexData.data.AccountNum;
 
     // Create user in Firebase Auth
     const userRecord = await auth.createUser({
@@ -53,10 +80,10 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       updatedAt: new Date().toISOString()
     };
 
-    // Store user data with addresses array in Firestore
+    // Store user data with addresses array in Firestore, using AccountNum as userId
     await db.collection('users').doc(userRecord.uid).set({
       id: userRecord.uid,
-      userId: userRecord.uid,
+      userId: architexAccountNum,
       orgName: userData.orgName,
       contactPerson: userData.contactPerson,
       designation: userData.designation,
@@ -75,7 +102,7 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
     return {
       success: true,
       message: 'User registered successfully. Please verify your email with the OTP sent.',
-      data: { uid: userRecord.uid }
+      data: { uid: userRecord.uid, userId: architexAccountNum }
     };
   } catch (error: any) {
     return {
