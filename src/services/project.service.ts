@@ -8,13 +8,11 @@ const USERS_COLLECTION = 'users';
 export const createProject = async (data: ICreateProjectDTO): Promise<IProject> => {
     try {
         // First verify if user exists and check their plan info
-        const userRef = db.collection(USERS_COLLECTION).doc(data.userId);
-        const userDoc = await userRef.get();
-
-        if (!userDoc.exists) {
+        const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', data.userId).get();
+        if (userQuery.empty) {
             throw new Error('User not found');
         }
-
+        const userDoc = userQuery.docs[0];
         const userData = userDoc.data();
         
         // Get current projects count
@@ -125,7 +123,7 @@ export const createProject = async (data: ICreateProjectDTO): Promise<IProject> 
             updateData['planInfo.features.remainingProjects'] = planInfo.features.projects - (currentProjectsCount + 1);
         }
 
-        await userRef.update(updateData);
+        await userDoc.ref.update(updateData);
         await projectRef.set(projectData);
 
         return projectData as IProject;
@@ -138,12 +136,11 @@ export const createProject = async (data: ICreateProjectDTO): Promise<IProject> 
 export const getProjectById = async (id: string, userId: string): Promise<IProject | null> => {
     try {
         // First verify if user exists in users collection
-        const userRef = db.collection(USERS_COLLECTION).doc(userId);
-        const userDoc = await userRef.get();
-
-        if (!userDoc.exists) {
+        const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', userId).get();
+        if (userQuery.empty) {
             throw new Error('User not found');
         }
+        const userDoc = userQuery.docs[0];
 
         // Then get the project
         const projectRef = db.collection(COLLECTION_NAME).doc(id);
@@ -188,12 +185,11 @@ export const getAllProjects = async (): Promise<IProject[]> => {
 
 export const updateProject = async (id: string, userId: string, data: IUpdateProjectDTO): Promise<IProject> => {
     // First verify if user exists in users collection
-    const userRef = db.collection(USERS_COLLECTION).doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
+    const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', userId).get();
+    if (userQuery.empty) {
         throw new Error('User not found');
     }
+    const userDoc = userQuery.docs[0];
 
     // Then verify if project exists and belongs to the user
     const projectRef = db.collection(COLLECTION_NAME).doc(id);
@@ -221,12 +217,11 @@ export const updateProject = async (id: string, userId: string, data: IUpdatePro
 export const deleteProject = async (id: string, userId: string): Promise<void> => {
     try {
         // First verify if user exists in users collection
-        const userRef = db.collection(USERS_COLLECTION).doc(userId);
-        const userDoc = await userRef.get();
-
-        if (!userDoc.exists) {
+        const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', userId).get();
+        if (userQuery.empty) {
             throw new Error('User not found');
         }
+        const userDoc = userQuery.docs[0];
 
         // Then verify if project exists and belongs to the user
         const projectRef = db.collection(COLLECTION_NAME).doc(id);
@@ -251,12 +246,11 @@ export const deleteProject = async (id: string, userId: string): Promise<void> =
 export const addRemarkToProject = async (id: string, userId: string, remarkText: string): Promise<IProject> => {
     try {
         // First verify if user exists in users collection
-        const userRef = db.collection(USERS_COLLECTION).doc(userId);
-        const userDoc = await userRef.get();
-
-        if (!userDoc.exists) {
+        const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', userId).get();
+        if (userQuery.empty) {
             throw new Error('User not found');
         }
+        const userDoc = userQuery.docs[0];
 
         // Then verify if project exists and belongs to the user
         const projectRef = db.collection(COLLECTION_NAME).doc(id);
@@ -298,12 +292,11 @@ export const addRemarkToProject = async (id: string, userId: string, remarkText:
 export const updateProjectStatus = async (id: string, userId: string, status: 'created' | 'inprogress' | 'completed'): Promise<IProject> => {
     try {
         // First verify if user exists in users collection
-        const userRef = db.collection(USERS_COLLECTION).doc(userId);
-        const userDoc = await userRef.get();
-
-        if (!userDoc.exists) {
+        const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', userId).get();
+        if (userQuery.empty) {
             throw new Error('User not found');
         }
+        const userDoc = userQuery.docs[0];
 
         // Then verify if project exists and belongs to the user
         const projectRef = db.collection(COLLECTION_NAME).doc(id);

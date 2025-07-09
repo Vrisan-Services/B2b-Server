@@ -6,12 +6,11 @@ const USERS_COLLECTION = 'users';
 
 export const createLead = async (data: ICreateLeadDTO): Promise<ILead> => {
     try {
-        const userRef = db.collection(USERS_COLLECTION).doc(data.userId);
-        const userDoc = await userRef.get();
-
-        if (!userDoc.exists) {
+        const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', data.userId).get();
+        if (userQuery.empty) {
             throw new Error('User not found');
         }
+        const userDoc = userQuery.docs[0];
 
         const leadRef = db.collection(LEADS_COLLECTION).doc();
         const now = new Date();
@@ -33,12 +32,11 @@ export const createLead = async (data: ICreateLeadDTO): Promise<ILead> => {
 
 export const createMultipleLeads = async (leads: Omit<ICreateLeadDTO, 'userId'>[], userId: string): Promise<ILead[]> => {
     try {
-        const userRef = db.collection('users').doc(userId);
-        const userDoc = await userRef.get();
-
-        if (!userDoc.exists) {
+        const userQuery = await db.collection('users').where('userId', '==', userId).get();
+        if (userQuery.empty) {
             throw new Error('User not found');
         }
+        const userDoc = userQuery.docs[0];
 
         // Fetch all existing leads for the user
         const allUserLeadsSnapshot = await db.collection(LEADS_COLLECTION)
@@ -109,12 +107,11 @@ export const getLeadsByUserId = async (userId: string): Promise<ILead[]> => {
 
 export const updateLeadById = async (leadId: string, userId: string, data: Partial<IUpdateLeadDTO>): Promise<ILead> => {
     try {
-        const userRef = db.collection(USERS_COLLECTION).doc(userId);
-        const userDoc = await userRef.get();
-        
-        if (!userDoc.exists) {
+        const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', userId).get();
+        if (userQuery.empty) {
             throw new Error('User not found');
         }
+        const userDoc = userQuery.docs[0];
 
         const leadRef = db.collection(LEADS_COLLECTION).doc(leadId);
         const leadDoc = await leadRef.get();
