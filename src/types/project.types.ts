@@ -1,3 +1,8 @@
+export interface IRemark {
+    text: string;
+    date: Date;
+}
+
 export interface IProject {
     id: string;
     userId: string;
@@ -7,6 +12,8 @@ export interface IProject {
     projectType: string;
     buildingConfig: string;
     address: string;
+    status: 'created' | 'inprogress' | 'completed';
+    remarks: IRemark[];
     createdAt: Date;
     updatedAt: Date;
     purchaseIncharge?: string;
@@ -21,6 +28,8 @@ export interface ICreateProjectDTO {
     projectType: string;
     buildingConfig: string;
     address: string;
+    status?: 'created' | 'inprogress' | 'completed';
+    remarks?: IRemark[];
     purchaseIncharge?: string;
     purchaseAmount?: number;
 }
