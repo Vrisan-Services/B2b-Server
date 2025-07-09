@@ -4,14 +4,14 @@ import { UserData, UpdateProfileData, AddAddressData, UpdateAddressData, ApiResp
 // Get user profile
 export const getProfile = async (userId: string): Promise<ApiResponse> => {
   try {
-    const userDoc = await db.collection('users').doc(userId).get();
-    if (!userDoc.exists) {
+    const userQuery = await db.collection('users').where('userId', '==', userId).get();
+    if (userQuery.empty) {
       return {
         success: false,
         message: 'User not found'
       };
     }
-
+    const userDoc = userQuery.docs[0];
     const userData = userDoc.data() as UserData;
     return {
       success: true,
@@ -30,21 +30,18 @@ export const getProfile = async (userId: string): Promise<ApiResponse> => {
 // Update user profile
 export const updateProfile = async (userId: string, updateData: UpdateProfileData): Promise<ApiResponse> => {
   try {
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
+    const userQuery = await db.collection('users').where('userId', '==', userId).get();
+    if (userQuery.empty) {
       return {
         success: false,
         message: 'User not found'
       };
     }
-
+    const userRef = userQuery.docs[0].ref;
     await userRef.update({
       ...updateData,
       updatedAt: new Date().toISOString()
     });
-
     return {
       success: true,
       message: 'Profile updated successfully'
@@ -61,24 +58,20 @@ export const updateProfile = async (userId: string, updateData: UpdateProfileDat
 // Add new address
 export const addAddress = async (userId: string, addressData: AddAddressData): Promise<ApiResponse> => {
   try {
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
+    const userQuery = await db.collection('users').where('userId', '==', userId).get();
+    if (userQuery.empty) {
       return {
         success: false,
         message: 'User not found'
       };
     }
-
-    const userData = userDoc.data() as UserData;
+    const userRef = userQuery.docs[0].ref;
+    const userData = userQuery.docs[0].data() as UserData;
     const addresses = userData.addresses || [];
-
     // If this is the first address or marked as default, update other addresses
     if (addressData.isDefault) {
       addresses.forEach(addr => addr.isDefault = false);
     }
-
     const newAddress = {
       id: db.collection('users').doc().id,
       ...addressData,
@@ -86,12 +79,10 @@ export const addAddress = async (userId: string, addressData: AddAddressData): P
       createdAt: new Date(),
       updatedAt: new Date()
     };
-
     await userRef.update({
       addresses: [...addresses, newAddress],
       updatedAt: new Date().toISOString()
     });
-
     return {
       success: true,
       message: 'Address added successfully',
@@ -109,27 +100,23 @@ export const addAddress = async (userId: string, addressData: AddAddressData): P
 // Update address
 export const updateAddress = async (userId: string, addressId: string, addressData: Partial<AddAddressData>): Promise<ApiResponse> => {
   try {
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
+    const userQuery = await db.collection('users').where('userId', '==', userId).get();
+    if (userQuery.empty) {
       return {
         success: false,
         message: 'User not found'
       };
     }
-
-    const userData = userDoc.data() as UserData;
+    const userRef = userQuery.docs[0].ref;
+    const userData = userQuery.docs[0].data() as UserData;
     const addresses = userData.addresses || [];
     const addressIndex = addresses.findIndex(addr => addr.id === addressId);
-
     if (addressIndex === -1) {
       return {
         success: false,
         message: 'Address not found'
       };
     }
-
     // If setting as default, update other addresses
     if (addressData.isDefault) {
       addresses.forEach(addr => {
@@ -138,19 +125,16 @@ export const updateAddress = async (userId: string, addressId: string, addressDa
         }
       });
     }
-
     // Update the address
     addresses[addressIndex] = {
       ...addresses[addressIndex],
       ...addressData,
       updatedAt: new Date()
     };
-
     await userRef.update({
       addresses,
       updatedAt: new Date().toISOString()
     });
-
     return {
       success: true,
       message: 'Address updated successfully'
@@ -167,21 +151,18 @@ export const updateAddress = async (userId: string, addressId: string, addressDa
 // Update user logo
 export const updateUserLogo = async (userId: string, logoPath: string): Promise<ApiResponse> => {
   try {
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
+    const userQuery = await db.collection('users').where('userId', '==', userId).get();
+    if (userQuery.empty) {
       return {
         success: false,
         message: 'User not found'
       };
     }
-
+    const userRef = userQuery.docs[0].ref;
     await userRef.update({
       logo: logoPath,
       updatedAt: new Date().toISOString()
     });
-
     return {
       success: true,
       message: 'Logo updated successfully',
@@ -198,14 +179,14 @@ export const updateUserLogo = async (userId: string, logoPath: string): Promise<
 
 export const updateUserBankDetails = async (userId: string, bankDetails: BankDetails): Promise<ApiResponse> => {
   try {
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
+    const userQuery = await db.collection('users').where('userId', '==', userId).get();
+    if (userQuery.empty) {
       return {
         success: false,
         message: 'User not found'
       };
     }
+    const userRef = userQuery.docs[0].ref;
     await userRef.update({
       bankDetails,
       updatedAt: new Date().toISOString()

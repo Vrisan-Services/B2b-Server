@@ -53,7 +53,10 @@ export const setUserPlan = async (
     features: features
   };
 
-  await db.collection('users').doc(userId).update({
+  const userQuery = await db.collection('users').where('userId', '==', userId).get();
+  if (userQuery.empty) throw new Error('User not found');
+  const userDoc = userQuery.docs[0];
+  await userDoc.ref.update({
     isCrmSubscribed: true,
     CRMplanInfo
   });
