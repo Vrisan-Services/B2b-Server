@@ -1,4 +1,4 @@
-import { IProject, ICreateProjectDTO, IUpdateProjectDTO } from '../types/project.types';
+import { IProject, ICreateProjectDTO, IUpdateProjectDTO, IRemark } from '../types/project.types';
 import { db } from '../config/firebase';
 import * as admin from 'firebase-admin';
 
@@ -42,6 +42,8 @@ export const createProject = async (data: ICreateProjectDTO): Promise<IProject> 
                 projectType: data.projectType,
                 buildingConfig: data.buildingConfig,
                 address: data.address,
+                status: data.status || 'created',
+                remarks: data.remarks || [],
                 createdAt: now,
                 updatedAt: now,
                 planName: 'free',
@@ -103,6 +105,8 @@ export const createProject = async (data: ICreateProjectDTO): Promise<IProject> 
             projectType: data.projectType,
             buildingConfig: data.buildingConfig,
             address: data.address,
+            status: data.status || 'created',
+            remarks: data.remarks || [],
             createdAt: now,
             updatedAt: now,
             planName: planInfo.planName,
@@ -240,6 +244,91 @@ export const deleteProject = async (id: string, userId: string): Promise<void> =
         await projectRef.delete();
     } catch (error) {
         console.error('Error in deleteProject service:', error);
+        throw error;
+    }
+};
+
+export const addRemarkToProject = async (id: string, userId: string, remarkText: string): Promise<IProject> => {
+    try {
+        // First verify if user exists in users collection
+        const userRef = db.collection(USERS_COLLECTION).doc(userId);
+        const userDoc = await userRef.get();
+
+        if (!userDoc.exists) {
+            throw new Error('User not found');
+        }
+
+        // Then verify if project exists and belongs to the user
+        const projectRef = db.collection(COLLECTION_NAME).doc(id);
+        const projectDoc = await projectRef.get();
+
+        if (!projectDoc.exists) {
+            throw new Error('Project not found');
+        }
+
+        const projectData = projectDoc.data() as IProject;
+        if (projectData.userId !== userId) {
+            throw new Error('Unauthorized: Project does not belong to this user');
+        }
+
+        // Create new remark
+        const newRemark: IRemark = {
+            text: remarkText,
+            date: new Date()
+        };
+
+        // Add remark to existing remarks array
+        const updatedRemarks = [...(projectData.remarks || []), newRemark];
+
+        // Update the project
+        const updateData = {
+            remarks: updatedRemarks,
+            updatedAt: new Date()
+        };
+
+        await projectRef.update(updateData);
+        const updatedDoc = await projectRef.get();
+        return { id: updatedDoc.id, ...updatedDoc.data() } as IProject;
+    } catch (error) {
+        console.error('Error in addRemarkToProject service:', error);
+        throw error;
+    }
+};
+
+export const updateProjectStatus = async (id: string, userId: string, status: 'created' | 'inprogress' | 'completed'): Promise<IProject> => {
+    try {
+        // First verify if user exists in users collection
+        const userRef = db.collection(USERS_COLLECTION).doc(userId);
+        const userDoc = await userRef.get();
+
+        if (!userDoc.exists) {
+            throw new Error('User not found');
+        }
+
+        // Then verify if project exists and belongs to the user
+        const projectRef = db.collection(COLLECTION_NAME).doc(id);
+        const projectDoc = await projectRef.get();
+
+        if (!projectDoc.exists) {
+            throw new Error('Project not found');
+        }
+
+        const projectData = projectDoc.data() as IProject;
+        if (projectData.userId !== userId) {
+            throw new Error('Unauthorized: Project does not belong to this user');
+        }
+
+        // Update the project status
+        const updateData = {
+            status: status,
+            updatedAt: new Date()
+        };
+
+        await projectRef.update(updateData);
+        const updatedDoc = await projectRef.get();
+        return { id: updatedDoc.id, ...updatedDoc.data() } as IProject;
+    } catch (error) {
+        console.error('Error in updateProjectStatus service:', error);
         throw error;
     }
 }; 
