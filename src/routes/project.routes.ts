@@ -5,7 +5,9 @@ import {
     getAllProjectsHandler,
     updateProjectHandler,
     deleteProjectHandler,
-    getProjectsByUserIdHandler
+    getProjectsByUserIdHandler,
+    addRemarkToProjectHandler,
+    updateProjectStatusHandler
 } from '../controllers/project.controller';
 
 const router = Router();
@@ -24,6 +26,12 @@ router.get('/:id', getProjectByIdHandler);
 
 // Update project
 router.put('/:id', updateProjectHandler);
+
+// Add remark to project
+router.post('/:id/remarks', addRemarkToProjectHandler);
+
+// Update project status
+router.put('/:id/status', updateProjectStatusHandler);
 
 // Delete project
 router.delete('/:id', deleteProjectHandler);
