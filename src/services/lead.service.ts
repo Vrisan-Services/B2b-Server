@@ -1,5 +1,6 @@
 import { ILead, ICreateLeadDTO, IUpdateLeadDTO } from '../types/lead.types';
 import { db } from '../config/firebase';
+import axios from 'axios';
 
 const LEADS_COLLECTION = 'leads';
 const USERS_COLLECTION = 'users';
@@ -353,5 +354,135 @@ export const getCitywiseProjectsData = async (userId: string) => {
     } catch (error) {
         console.error('Error in getCitywiseProjectsData service:', error);
         throw new Error(`Failed to get citywise projects data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+};
+
+export const fetchAndStoreLeadsFromAPI = async (userId: string, count: number): Promise<ILead[]> => {
+    try {
+        // Validate user exists
+        const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', userId).get();
+        if (userQuery.empty) {
+            throw new Error('User not found');
+        }
+
+        // Call external API
+        const response = await axios.post(`${process.env.ARCHITEX_CUST_URL}/socialLeads/partners`, {
+            Count: count,
+            AccountNum: userId
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const apiLeads = response.data;
+
+        // Fetch existing leads to avoid duplicates
+        const existingLeadsSnapshot = await db.collection(LEADS_COLLECTION)
+            .where('userId', '==', userId)
+            .get();
+        const existingLeadEmails = new Set(existingLeadsSnapshot.docs.map(doc => doc.data().email));
+
+        const batch = db.batch();
+        const createdLeads: ILead[] = [];
+
+        // Support new Architex API response structure
+        let leadsArray: any[] = [];
+        if (Array.isArray(apiLeads)) {
+            leadsArray = apiLeads;
+        } else if (apiLeads && Array.isArray(apiLeads.leads)) {
+            leadsArray = apiLeads.leads;
+        }
+        const fetchDate = new Date();
+        leadsArray.forEach((apiLead: any) => {
+            // Use LeadName or Name for name, and map all fields
+            const email = apiLead.Email || apiLead.email || '';
+            if (existingLeadEmails.has(email)) {
+                return;
+            }
+            const leadRef = db.collection(LEADS_COLLECTION).doc();
+            // Remarks: if LastNoteAdded is present and not default, add as remark
+            let remarks = [];
+            if (apiLead.LastNoteAdded && apiLead.LastNoteAdded !== '1900-01-01T00:00:00.000Z') {
+                remarks.push({ text: apiLead.LastNoteAdded, date: new Date(apiLead.LastNoteAdded) });
+            }
+            const newLead: ILead = {
+                id: leadRef.id,
+                name: apiLead.LeadName || apiLead.Name || apiLead.name || 'Unknown',
+                email: email,
+                phone: apiLead.Phone || apiLead.phone || '',
+                company: apiLead.Company || apiLead.company || '',
+                type: apiLead.Type || apiLead.type || 'Architecture',
+                value: apiLead.Size ? String(apiLead.Size) : (apiLead.value || apiLead.budget || '0'),
+                source: apiLead.Source ? String(apiLead.Source) : (apiLead.source || 'API'),
+                status: 'Fresh',
+                remarks: remarks,
+                city: apiLead.City || apiLead.city || '',
+                state: apiLead.State || apiLead.state || '',
+                createdAt: apiLead.CreatedDateTime ? new Date(apiLead.CreatedDateTime) : fetchDate,
+                userId: userId,
+                architexFetchedAt: fetchDate
+            };
+            batch.set(leadRef, newLead);
+            createdLeads.push(newLead);
+        });
+
+        // Commit batch if there are leads to create
+        if (createdLeads.length > 0) {
+            await batch.commit();
+
+            // Update CRM plan usage for the user
+            const userQuery = await db.collection(USERS_COLLECTION).where('userId', '==', userId).get();
+            if (!userQuery.empty) {
+                const userDoc = userQuery.docs[0];
+                const userData = userDoc.data();
+                if (userData.isCrmSubscribed && userData.CRMplanInfo) {
+                    const crmPlanInfo = userData.CRMplanInfo;
+                    const features = crmPlanInfo.features || {};
+                    const freshLeadsPerMonth = features.freshLeadsPerMonth || 0;
+                    const now = new Date();
+                    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+                    // Count only leads fetched from Architex in the current month
+                    const leadsSnapshot = await db.collection(LEADS_COLLECTION)
+                        .where('userId', '==', userId)
+                        .where('architexFetchedAt', '>=', new Date(now.getFullYear(), now.getMonth(), 1))
+                        .get();
+                    const usedLeadsThisMonth = leadsSnapshot.size;
+                    const remainingLeadsThisMonth = Math.max(0, freshLeadsPerMonth - usedLeadsThisMonth);
+
+                    // Track usage history
+                    let leadsUsageHistory = crmPlanInfo.leadsUsageHistory || [];
+                    let monthUsage = leadsUsageHistory.find((h: any) => h.month === currentMonth);
+                    if (!monthUsage) {
+                        monthUsage = { month: currentMonth, used: 0, remaining: freshLeadsPerMonth };
+                        leadsUsageHistory = leadsUsageHistory.filter((h: any) => h.month !== currentMonth);
+                        leadsUsageHistory.push(monthUsage);
+                    }
+                    monthUsage.used = usedLeadsThisMonth;
+                    monthUsage.remaining = remainingLeadsThisMonth;
+
+                    // Update features
+                    features.usedLeadsThisMonth = usedLeadsThisMonth;
+                    features.remainingLeadsThisMonth = remainingLeadsThisMonth;
+
+                    await userDoc.ref.update({
+                        'CRMplanInfo.features': features,
+                        'CRMplanInfo.leadsUsageHistory': leadsUsageHistory
+                    });
+                }
+            }
+        }
+
+        // Return all leads for the user
+        return await getLeadsByUserId(userId);
+    } catch (error) {
+        console.error('Error in fetchAndStoreLeadsFromAPI service:', error);
+        // If error is from axios and has a response, extract the API error message
+        if (error && typeof error === 'object' && (error as any).isAxiosError && (error as any).response) {
+            const apiError = (error as any).response.data?.message || (error as any).response.data || (error as any).message;
+            throw new Error(`Architex API error: ${apiError}`);
+        }
+        throw new Error(`Failed to fetch and store leads: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 };

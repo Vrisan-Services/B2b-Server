@@ -18,6 +18,7 @@ export interface ILead {
     state: string;
     createdAt: Date | any; // Allow Firestore Timestamp
     userId: string;
+    architexFetchedAt?: Date | null; // Date when fetched from Architex
 }
 
 export interface ICreateLeadDTO {
@@ -34,6 +35,7 @@ export interface ICreateLeadDTO {
     state: string;
     createdAt: Date;
     userId: string;
+    architexFetchedAt?: Date | null; // Date when fetched from Architex
 }
 
 export interface IUpdateLeadDTO {
