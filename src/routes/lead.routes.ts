@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { createLeadHandler, getLeadsByUserIdHandler, updateLeadHandler, getDashboardStatsHandler, getMonthlyBudgetDataHandler, getCustomerGrowthDataHandler, getCitywiseProjectsDataHandler } from '../controllers/lead.controller';
+import { getLeadsByUserIdHandler, updateLeadHandler, getDashboardStatsHandler, getMonthlyBudgetDataHandler, getCustomerGrowthDataHandler, getCitywiseProjectsDataHandler, fetchLeadsFromAPIHandler } from '../controllers/lead.controller';
 
 const router = Router();
 
-router.post('/', createLeadHandler);
+router.post('/fetch-from-api', fetchLeadsFromAPIHandler);
 router.get('/:userId', getLeadsByUserIdHandler);
 router.patch('/:id', updateLeadHandler);
 router.get('/dashboard/:userId', getDashboardStatsHandler);
