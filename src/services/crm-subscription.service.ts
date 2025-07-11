@@ -43,7 +43,7 @@ export const setUserPlan = async (
     expiresAt = 'custom';
   } else {
     expiresAt = new Date();
-    expiresAt.setDate(subscribedAt.getDate() + 365);
+    expiresAt.setDate(subscribedAt.getDate() + 30);
   }
 
   const CRMplanInfo: CRMPlanInfo = {
