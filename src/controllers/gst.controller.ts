@@ -30,7 +30,22 @@ export const gstVerification = async (req: Request, res: Response) => {
         const response = await fetch(url, options);
 
         if (!response.ok) {
-            throw new Error(`API request failed with status: ${response.status}`);
+            let errorText = await response.text();
+
+            let errorMessage = errorText;
+            try {
+                const errorObj = JSON.parse(errorText);
+                if (errorObj && errorObj.message) {
+                    errorMessage = errorObj.message;
+                }
+            } catch (e) {
+                // Not JSON, keep errorText as is
+            }
+
+            return res.status(response.status).json({
+                success: false,
+                message: errorMessage || `API request failed with status: ${response.status}`
+            });
         }
 
         const data = await response.json();
