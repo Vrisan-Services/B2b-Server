@@ -3,6 +3,6 @@ import { gstVerification } from '../controllers/gst.controller';
 
 const router = express.Router();
 
-router.post('/gst/verify', gstVerification);
+router.post('/verify', gstVerification);
 
 export default router; 

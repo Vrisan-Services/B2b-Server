@@ -10,13 +10,16 @@ import paymentRoutes from './routes/payment.routes';
 import gstRoutes from './routes/gst.route';
 import crmSubscriptionRoutes from './routes/crm-subscription.routes';
 import leadRoutes from './routes/lead.routes';
+import subscriptionExpirationRoutes from './routes/subscription-expiration.routes';
 import path from 'path';
 import invoiceRoutes from './routes/invoice.routes';
 import fs from 'fs';
+import { subscriptionCronService } from './services/cron.service';
+
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -27,14 +30,15 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
-app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/waitlist', waitlistRoutes);
-app.use('/api/subscribe', subscriptionRoutes);
-app.use('/api', paymentRoutes);
-app.use('/api', gstRoutes);
+app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/gst', gstRoutes);
 app.use('/api/crm-subscription', crmSubscriptionRoutes);
 app.use('/api/leads', leadRoutes);
-app.use('/api/invoices', invoiceRoutes);
+app.use('/api/subscription-expiration', subscriptionExpirationRoutes);
+app.use('/api/invoice', invoiceRoutes);
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
@@ -51,6 +55,9 @@ if (!fs.existsSync(invoicesDir)) {
   fs.mkdirSync(invoicesDir, { recursive: true });
 }
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  
+  // Start the subscription expiration cron service
+  subscriptionCronService.start();
 }); 

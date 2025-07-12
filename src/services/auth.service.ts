@@ -29,7 +29,7 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       City: userData.city,
       ZipCode: userData.pincode,
       Email: userData.email,
-      CustGroup: 'B2B',
+      CustGroup: 'Archipreneur',
     };
     const architexRes = await fetch(architexUrl, {
       method: 'POST',
