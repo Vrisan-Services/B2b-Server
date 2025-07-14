@@ -97,6 +97,8 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       isCrmSubscribed:false,
       addresses: [initialAddress], // Store address as an array
       createdAt: new Date().toISOString(),
+      design_credits: 10, // Default credits for new user
+      design_count: 0,    // Default design count
     });
 
     return {
