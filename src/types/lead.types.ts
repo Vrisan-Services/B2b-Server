@@ -8,6 +8,7 @@ export interface ILead {
     name: string;
     email: string;
     phone: string;
+    alternatePhone?: string;
     company: string;
     type: 'Architecture' | 'Interior';
     value: string;
@@ -25,6 +26,7 @@ export interface ICreateLeadDTO {
     name: string;
     email:string;
     phone: string;
+    alternatePhone?: string;
     company: string;
     type: 'Architecture' | 'Interior';
     value: string;
@@ -42,6 +44,7 @@ export interface IUpdateLeadDTO {
     name?: string;
     email?: string;
     phone?: string;
+    alternatePhone?: string;
     company?: string;
     type?: 'Architecture' | 'Interior';
     value?: string;
