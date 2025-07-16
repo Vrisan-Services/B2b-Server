@@ -364,7 +364,7 @@ export const fetchAndStoreLeadsFromAPI = async (userId: string, count: number): 
         if (userQuery.empty) {
             throw new Error('User not found');
         }
-
+        console.log(process.env.ARCHITEX_CUST_URL)
         // Call external API
         const response = await axios.post(`${process.env.ARCHITEX_CUST_URL}/socialLeads/partners`, {
             Count: count,
@@ -374,8 +374,8 @@ export const fetchAndStoreLeadsFromAPI = async (userId: string, count: number): 
                 'Content-Type': 'application/json'
             }
         });
-
-        const apiLeads = response.data;
+        
+        const apiLeads = response.data.data;
 
         // Fetch existing leads to avoid duplicates
         const existingLeadsSnapshot = await db.collection(LEADS_COLLECTION)
@@ -415,7 +415,7 @@ export const fetchAndStoreLeadsFromAPI = async (userId: string, count: number): 
                 type: apiLead.Type || apiLead.type || 'Architecture',
                 value: apiLead.Size ? String(apiLead.Size) : (apiLead.value || apiLead.budget || '0'),
                 source: apiLead.Source ? String(apiLead.Source) : (apiLead.source || 'API'),
-                status: 'Fresh',
+                status: apiLead.Stage,
                 remarks: remarks,
                 city: apiLead.City || apiLead.city || '',
                 state: apiLead.State || apiLead.state || '',
@@ -474,10 +474,10 @@ export const fetchAndStoreLeadsFromAPI = async (userId: string, count: number): 
             }
         }
 
-        // Return all leads for the user
-        return await getLeadsByUserId(userId);
+        // Return only the newly created leads
+        return createdLeads;
     } catch (error) {
-        console.error('Error in fetchAndStoreLeadsFromAPI service:', error);
+        
         // If error is from axios and has a response, extract the API error message
         if (error && typeof error === 'object' && (error as any).isAxiosError && (error as any).response) {
             const apiError = (error as any).response.data?.message || (error as any).response.data || (error as any).message;
