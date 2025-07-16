@@ -137,7 +137,7 @@ export const fetchLeadsFromAPIHandler = async (req: Request, res: Response): Pro
         res.status(200).json({ 
             message: 'Leads fetched and stored successfully', 
             count: createdLeads.length, 
-            leads: createdLeads 
+            leads: createdLeads // Only the newly stored leads
         });
 
     } catch (error) {
