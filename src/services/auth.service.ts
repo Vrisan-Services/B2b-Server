@@ -14,6 +14,16 @@ const generateOTP = (): string => {
 
 export const signup = async (userData: UserSignupData): Promise<ApiResponse> => {
   try {
+    // GST number uniqueness check
+    if (userData.gstNumber) {
+      const gstQuery = await db.collection('users').where('gstNumber', '==', userData.gstNumber).get();
+      if (!gstQuery.empty) {
+        return {
+          success: false,
+          message: 'GST number already in use by another user',
+        };
+      }
+    }
     // Add +91 prefix to phone if not present
     let phoneWithPrefix = userData.phone;
     if (!phoneWithPrefix.startsWith('+91')) {

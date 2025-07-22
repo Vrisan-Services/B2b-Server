@@ -52,15 +52,41 @@ export const gstVerification = async (req: Request, res: Response) => {
 
         const data = await response.json();
 
-        if (data.valid) {
+        if (data.valid || data.success === true) {
             const usersRef = db.collection('users');
             const snapshot = await usersRef.where('gstNumber', '==', GSTIN).get();
 
+            let updatedUserData = null;
             if (!snapshot.empty) {
-                snapshot.forEach(doc => {
-                    doc.ref.update({ gstVerified: true });
-                });
+                for (const doc of snapshot.docs) {
+                    // Prepare address object from GST data
+                    const split = data.principal_place_split_address || {};
+                    const addressObj = {
+                        address1: data.principal_place_address || '',
+                        address2: split.street || '',
+                        city: split.location || split.city || '',
+                        state: split.state || '',
+                        pincode: split.pincode || '',
+                        isDefault: true,
+                        updatedAt: new Date().toISOString(),
+                        createdAt: new Date().toISOString(),
+                    };
+                    // Update orgName and addresses
+                    await doc.ref.update({
+                        gstVerified: true,
+                        orgName: data.legal_name_of_business || data.trade_name_of_business || '',
+                        addresses: [addressObj],
+                    });
+                    // Fetch the updated user data
+                    const updatedDoc = await doc.ref.get();
+                    updatedUserData = updatedDoc.data();
+                }
             }
+            return res.status(200).json({
+                success: true,
+                data: data,
+                user: updatedUserData, // include updated user
+            });
         }
 
         return res.status(200).json({
