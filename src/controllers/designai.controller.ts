@@ -171,3 +171,42 @@ async function uploadBase64ImageToFirebase(base64Data: string, filename: string)
   await file.makePublic();
   return file.publicUrl();
 } 
+
+// POST /api/designai/subscribe
+export async function subscribeDesignAiPlan(req: Request, res: Response) {
+  try {
+    const { userId, planName } = req.body;
+    if (!userId || !planName) {
+      return res.status(400).json({ error: 'userId and planName are required', status: 400 });
+    }
+    // Define plan credits
+    const planCredits: Record<string, number> = {
+      Standard: 10,
+      Ultimate: 50,
+      Premium: 100
+    };
+    if (!planCredits[planName]) {
+      return res.status(400).json({ error: 'Invalid planName', status: 400 });
+    }
+    // Find user
+    const userSnap = await db.collection('users').where('userId', '==', userId).get();
+    if (userSnap.empty) {
+      return res.status(404).json({ error: 'User not found', status: 404 });
+    }
+    const userDoc = userSnap.docs[0];
+    const userData = userDoc.data();
+    const currentCredits = userData.design_credits || 0;
+    const newCredits = currentCredits + planCredits[planName];
+    await db.collection('users').doc(userDoc.id).update({
+      design_credits: newCredits
+    });
+    return res.json({
+      error: '',
+      status: 200,
+      message: `Successfully added ${planCredits[planName]} credits for ${planName} plan`,
+      data: { design_credits: newCredits }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message, status: 500 });
+  }
+} 
