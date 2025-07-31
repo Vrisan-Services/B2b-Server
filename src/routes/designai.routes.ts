@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDesignHistory, createDesign, generateDesign, initializeDesign } from '../controllers/designai.controller';
+import { getDesignHistory, createDesign, generateDesign, initializeDesign, subscribeDesignAiPlan } from '../controllers/designai.controller';
 
 const router = express.Router();
 
@@ -17,5 +17,8 @@ router.post('/initialize-design', initializeDesign);
 
 // POST: Generate a design (new flow)
 router.post('/generate-design', generateDesign);
+
+// POST: Subscribe to a design AI plan and add credits
+router.post('/subscribe', subscribeDesignAiPlan);
 
 export default router; 
