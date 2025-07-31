@@ -14,6 +14,15 @@ const generateOTP = (): string => {
 
 export const signup = async (userData: UserSignupData): Promise<ApiResponse> => {
   try {
+
+
+    if (userData.phone.length !== 10) {
+      return {
+        success: false,
+        message: 'Phone number must be 10 digits long',
+      };
+    }
+
     // GST number uniqueness check
     if (userData.gstNumber) {
       const gstQuery = await db.collection('users').where('gstNumber', '==', userData.gstNumber).get();
@@ -29,6 +38,14 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
     if (!phoneWithPrefix.startsWith('+91')) {
       phoneWithPrefix = '+91' + phoneWithPrefix.replace(/^\+?91/, '').replace(/\D/g, '');
     }
+
+     const gstQuery2 = await db.collection('users').where('phone', '==', phoneWithPrefix).get();
+      if (!gstQuery2.empty) {
+        return {
+          success: false,
+          message: 'Phone number already in use by another user',
+        };
+      }
 
     // Call Architex API to create user
     const architexUrl = `${process.env.ARCHITEX_CUST_URL}/custTable/signup`;
@@ -68,14 +85,19 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
     const otp = generateOTP();
     const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-    // Store OTP
-    otpStore[userData.email] = { otp, expires };
+    // // Store OTP
+    // otpStore[userData.email] = { otp, expires };
+    otpStore[userData.phone] = { otp, expires };
 
-    // Send verification email
-    const emailSent = await sendVerificationEmail(userData.email, otp);
-    if (!emailSent) {
-      throw new Error('Failed to send verification email');
-    }
+    // #TODO: Generate email Comment due to email sending issue, using phone otp
+    const smsSent = await sendSMS(userData.phone, `Your OTP is: ${otp}`);
+    if (!smsSent) throw new Error('Failed to send OTP SMS');
+
+    // // Send verification email
+    // const emailSent = await sendVerificationEmail(userData.email, otp);
+    // if (!emailSent) {
+    //   throw new Error('Failed to send verification email');
+    // }
 
     // Create initial address object
     const initialAddress = {
@@ -104,7 +126,7 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       phoneVerified: false,
       gstVerified: false,
       isSubscribed: false,
-      isCrmSubscribed:false,
+      isCrmSubscribed: false,
       addresses: [initialAddress], // Store address as an array
       createdAt: new Date().toISOString(),
       design_credits: 10, // Default credits for new user
@@ -144,7 +166,7 @@ export const verifyEmail = async (email: string, otp: string): Promise<ApiRespon
 
     // Get user by email
     const userRecord = await auth.getUserByEmail(email);
-    
+
     // Update email verification status
     await auth.updateUser(userRecord.uid, { emailVerified: true });
     await db.collection('users').doc(userRecord.uid).update({ emailVerified: true });
@@ -281,7 +303,7 @@ export const verifyLoginOTP = async (email: string, otp: string): Promise<ApiRes
 export const forgotPassword = async (email: string): Promise<ApiResponse> => {
   try {
     const userRecord = await auth.getUserByEmail(email);
-    
+
     if (!userRecord) {
       return {
         success: false,
@@ -335,7 +357,7 @@ export const resetPassword = async (email: string, otp: string, newPassword: str
 
     // Get user by email
     const userRecord = await auth.getUserByEmail(email);
-    
+
     // Update password
     await auth.updateUser(userRecord.uid, { password: newPassword });
 
@@ -358,7 +380,7 @@ export const resetPassword = async (email: string, otp: string, newPassword: str
 export const resendOTP = async (email: string, type: 'signup' | 'login' | 'forgot-password'): Promise<ApiResponse> => {
   try {
     const userRecord = await auth.getUserByEmail(email);
-    
+
     if (!userRecord) {
       return {
         success: false,
@@ -426,7 +448,7 @@ export const verifyPhoneLoginOTP = async (phone: string, otp: string): Promise<A
     }
 
     // Find user by phone in Firestore
-    const userQuery = await db.collection('users').where('phone', '==', phone).get();
+    const userQuery = await db.collection('users').where('phone', '==', phone).get()
     if (userQuery.empty) return { success: false, message: 'User not found' };
     const userDoc = userQuery.docs[0];
 
