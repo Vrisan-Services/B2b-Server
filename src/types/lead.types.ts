@@ -19,6 +19,7 @@ export interface ILead {
     state: string;
     createdAt: Date | any; // Allow Firestore Timestamp
     userId: string;
+    viewUpto?: Date | null; // Date until which the lead can be viewed
     architexFetchedAt?: Date | null; // Date when fetched from Architex
 }
 
@@ -37,6 +38,7 @@ export interface ICreateLeadDTO {
     state: string;
     createdAt: Date;
     userId: string;
+    viewUpto?: Date | null; // Date until which the lead can be viewed
     architexFetchedAt?: Date | null; // Date when fetched from Architex
 }
 
@@ -52,5 +54,6 @@ export interface IUpdateLeadDTO {
     status?: 'Converted' | 'Fresh'|'Follow-up'|'Lost';
     remarks?: IRemarkEntry[];
     city?: string;
+    viewUpto?: Date | null; // Date until which the lead can be viewed
     state?: string;
 } 

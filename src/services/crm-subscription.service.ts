@@ -70,5 +70,19 @@ export const setUserPlan = async (
     features: features
   });
 
+  // make free leads available
+  db.collection('leads').where('userId', '==', userId).get().then(snapshot => {
+    const batch = db.batch();
+    snapshot.forEach(doc => {
+      const leadData = doc.data();
+      if (leadData.viewUpto) {
+        batch.update(doc.ref, { viewUpto: null }); // 7 days
+      }
+    });
+    return batch.commit();
+  }).catch(error => {
+    console.error('Error updating leads:', error);
+  });
+
   return { success: true, plan };
 };

@@ -3,6 +3,7 @@ import { UserSignupData, UserLoginData, ApiResponse } from '../types/user.types'
 import { sendVerificationEmail, sendLoginOTP } from '../config/email';
 import { sendSMS } from '../config/sms';
 import fetch from 'node-fetch';
+import { fetchAndStoreSignupLeadsFromAPI } from './lead.service';
 
 // Store OTPs temporarily (in production, use Redis or similar)
 const otpStore: { [key: string]: { otp: string; expires: number } } = {};
@@ -39,13 +40,13 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       phoneWithPrefix = '+91' + phoneWithPrefix.replace(/^\+?91/, '').replace(/\D/g, '');
     }
 
-     const gstQuery2 = await db.collection('users').where('phone', '==', phoneWithPrefix).get();
-      if (!gstQuery2.empty) {
-        return {
-          success: false,
-          message: 'Phone number already in use by another user',
-        };
-      }
+    const gstQuery2 = await db.collection('users').where('phone', '==', phoneWithPrefix).get();
+    if (!gstQuery2.empty) {
+      return {
+        success: false,
+        message: 'Phone number already in use by another user',
+      };
+    }
 
     // Call Architex API to create user
     const architexUrl = `${process.env.ARCHITEX_CUST_URL}/custTable/signup`;
@@ -87,10 +88,10 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
 
     // // Store OTP
     // otpStore[userData.email] = { otp, expires };
-    otpStore[userData.phone] = { otp, expires };
+    otpStore[phoneWithPrefix] = { otp, expires };
 
     // #TODO: Generate email Comment due to email sending issue, using phone otp
-    const smsSent = await sendSMS(userData.phone, `Your OTP is: ${otp}`);
+    const smsSent = await sendSMS(phoneWithPrefix, `Your OTP is: ${otp}`);
     if (!smsSent) throw new Error('Failed to send OTP SMS');
 
     // // Send verification email
@@ -132,6 +133,8 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       design_credits: 10, // Default credits for new user
       design_count: 0,    // Default design count
     });
+
+    await fetchAndStoreSignupLeadsFromAPI(userRecord.uid, 5);
 
     return {
       success: true,
