@@ -1,16 +1,16 @@
-export type PlanType = 'achipreneur' |  'custom';
+export type PlanType = 'achipreneur' | 'custom' | 'free';
 
 export interface PlanFeatureAccess {
-    
-    freshLeadsPerMonth: number;
-    welcomeBonusLeads: number;
-    crmAccess: boolean;
-    proposalsAndInvoicing: boolean;
-    loanAssistance: boolean;
-    performanceReports: boolean;
-    usedLeadsThisMonth?: number; // Number of leads used this month
-    remainingLeadsThisMonth?: number; // Number of leads remaining this month
-} 
+
+  freshLeadsPerMonth: number;
+  welcomeBonusLeads: number;
+  crmAccess: boolean;
+  proposalsAndInvoicing: boolean;
+  loanAssistance: boolean;
+  performanceReports: boolean;
+  usedLeadsThisMonth?: number; // Number of leads used this month
+  remainingLeadsThisMonth?: number; // Number of leads remaining this month
+}
 
 export interface CRMPlanInfo {
   planName: PlanType;

@@ -4,6 +4,8 @@ import { sendVerificationEmail, sendLoginOTP } from '../config/email';
 import { sendSMS } from '../config/sms';
 import fetch from 'node-fetch';
 import { fetchAndStoreSignupLeadsFromAPI } from './lead.service';
+import * as crmSubscriptionService from '../services/crm-subscription.service';
+
 
 // Store OTPs temporarily (in production, use Redis or similar)
 const otpStore: { [key: string]: { otp: string; expires: number } } = {};
@@ -134,6 +136,7 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       design_count: 0,    // Default design count
     });
 
+    await crmSubscriptionService.setUserPlan(architexAccountNum, "free");
     await fetchAndStoreSignupLeadsFromAPI(userRecord.uid, 5);
 
     return {
