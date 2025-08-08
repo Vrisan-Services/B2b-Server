@@ -136,8 +136,10 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       design_count: 0,    // Default design count
     });
 
-    await crmSubscriptionService.setUserPlan(architexAccountNum, "free");
-    await fetchAndStoreSignupLeadsFromAPI(userRecord.uid, 5);
+    if (userData.designation === 'Architect') {
+      await crmSubscriptionService.setUserPlan(architexAccountNum, "free");
+      await fetchAndStoreSignupLeadsFromAPI(userRecord.uid, 5);
+    }
 
     return {
       success: true,
