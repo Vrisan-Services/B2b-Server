@@ -17,7 +17,7 @@ const generateOTP = (): string => {
 
 export const signup = async (userData: UserSignupData): Promise<ApiResponse> => {
   try {
-
+    console.log(userData)
 
     if (userData.phone.length !== 10) {
       return {
@@ -138,7 +138,12 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
 
     if (userData.designation === 'Architect') {
       await crmSubscriptionService.setUserPlan(architexAccountNum, "free");
-      await fetchAndStoreSignupLeadsFromAPI(userRecord.uid, 5);
+      try {
+        fetchAndStoreSignupLeadsFromAPI(userRecord.uid, 5);
+      }
+      catch (e) {
+
+      }
     }
 
     return {
