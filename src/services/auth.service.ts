@@ -26,6 +26,13 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
       };
     }
 
+   if(userData.password.length < 6){
+    return {
+      success: false,
+      message: 'Password must be at least 6 characters long',
+    };
+   }
+
     // GST number uniqueness check
     if (userData.gstNumber) {
       const gstQuery = await db.collection('users').where('gstNumber', '==', userData.gstNumber).get();
@@ -51,30 +58,31 @@ export const signup = async (userData: UserSignupData): Promise<ApiResponse> => 
     }
 
     // Call Architex API to create user
-    const architexUrl = `${process.env.ARCHITEX_CUST_URL}/custTable/signup`;
-    const architexPayload = {
-      Name: userData.contactPerson, // or orgName if needed
-      Phone: userData.phone.replace(/^[+]?91/, '').replace(/\D/g, '').slice(-10),
-      PCode: '+91',
-      City: userData.city,
-      ZipCode: userData.pincode,
-      Email: userData.email,
-      CustGroup: userData.designation === 'Architect' ? 'Archipreneur' : 'B2B',
-    };
-    const architexRes = await fetch(architexUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(architexPayload),
-    });
-    const architexData = await architexRes.json();
-    if (!architexRes.ok || !architexData.data || !architexData.data.AccountNum) {
-      return {
-        success: false,
-        message: 'Failed to create user in Architex',
-        error: architexData.message || 'Architex API error',
-      };
-    }
-    const architexAccountNum = architexData.data.AccountNum;
+    // const architexUrl = `${process.env.ARCHITEX_CUST_URL}/custTable/signup`;
+    // const architexPayload = {
+    //   Name: userData.contactPerson, // or orgName if needed
+    //   Phone: userData.phone.replace(/^[+]?91/, '').replace(/\D/g, '').slice(-10),
+    //   PCode: '+91',
+    //   City: userData.city,
+    //   ZipCode: userData.pincode,
+    //   Email: userData.email,
+    //   CustGroup: userData.designation === 'Architect' ? 'Archipreneur' : 'B2B',
+    // };
+    // const architexRes = await fetch(architexUrl, {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(architexPayload),
+    // });
+    // const architexData = await architexRes.json();
+    // if (!architexRes.ok || !architexData.data || !architexData.data.AccountNum) {
+    //   return {
+    //     success: false,
+    //     message: 'Failed to create user in Architex',
+    //     error: architexData.message || 'Architex API error',
+    //   };
+    // }
+    // const architexAccountNum = architexData.data.AccountNum;
+    const architexAccountNum = "Cust-1706";
 
     // Create user in Firebase Auth
     const userRecord = await auth.createUser({

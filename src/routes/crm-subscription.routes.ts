@@ -3,7 +3,7 @@ import { subscribeToFreePlan, subscribeToPlan } from '../controllers/crm-subscri
 
 const router = Router();
 
-router.post('/:plan', subscribeToPlan);
-// router.post('/assign-free-plan', subscribeToFreePlan);
+// router.post('/:plan', subscribeToPlan);
+router.post('/assign-free-plan', subscribeToFreePlan);
 
 export default router; 
